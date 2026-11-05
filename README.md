@@ -26,9 +26,9 @@ curl -fsSL https://raw.githubusercontent.com/Tajwarbot/opencode/dev/script/insta
 
 Or download the latest AppImage from [Releases](https://github.com/Tajwarbot/opencode/releases/latest).
 
-The installer downloads the AppImage to `~/.local/share/opencode-visuals`, adds `opencode-visuals` to `~/.local/bin`, and creates a desktop entry. It does not touch an existing OpenCode installation.
+The installer downloads the AppImage to `~/.local/share/opencode-visuals`, adds `opencode-visuals` to `~/.local/bin`, and creates a desktop entry. The launcher uses XWayland when the session is Wayland and extracts the AppImage when FUSE is unavailable. It does not touch an existing OpenCode installation.
 
-The build disables auto-updates, so install a newer release to update it.
+The build does not use the upstream update feed. Install a newer release to update it.
 
 ## Build from source
 
