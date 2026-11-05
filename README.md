@@ -49,6 +49,7 @@ OPENCODE_CHANNEL=dev bun run --cwd packages/desktop pack
 - The generated frame cannot start a follow-up turn, open files, or read the workspace. Those actions belong to the typed catalog and the host.
 - Localization is partial. Commands and menu items follow the locale; the workbench and frame copy are English-first.
 - The desktop build is unsigned. Linux may ask you to mark the AppImage executable the first time.
+- Only Linux x86_64 is packaged. macOS and Windows need a native build from source.
 
 ## Upstream README
 
