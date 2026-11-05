@@ -1,3 +1,59 @@
+# OpenCode Visuals
+
+OpenCode Visuals is a fork of [OpenCode](https://github.com/anomalyco/opencode) that adds a built-in generative visual layer to the desktop app. The assistant can turn an engineering or general explanation into an interactive visual in the conversation.
+
+The model makes the decision in its own response. There is no separate router and no extra model call. The `visual` skill tells the assistant to decide silently whether a visual proves the point, and to always include one when the user asks for a visual.
+
+## What this fork adds
+
+- **Typed engineering visuals:** mechanism, beam, Mohr circle, stress-strain, pressure-volume cycle, tolerance stack, process flow, exploded assembly, task state, diagram, and plot.
+- **General-purpose generated UI:** an `html` kind for interactive explainers, comparisons, calculators, timelines, layouts, and one-off diagrams that do not fit the engineering catalog.
+- **One visual format:** a fenced `visual` block with a small JSON spec. Typed kinds keep the math and units inside the renderer. The `html` kind runs in an opaque iframe with no network, storage, parent access, or host bridge.
+- **Appearance > Visuals:** choose inline in chat or the side panel. The choice is stored as `appearance.visuals` and exposed to plugins as `ctx.appearance.visualDisplay()`.
+- **A session workbench, composer pill, `/visual` command, and `visual` skill.**
+
+The typed tier stays the default for engineering. The generated tier exists for the long tail. Adding a visual kind means adding a renderer; the `html` kind is the escape hatch when a typed kind does not fit.
+
+## Install
+
+The current build is a Linux x86_64 AppImage. It installs as **OpenCode Visuals**, next to the original OpenCode, with its own profile at `~/.config/ai.opencode.desktop.dev`.
+
+One command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Tajwarbot/opencode/dev/script/install-visuals.sh | bash
+```
+
+Or download the latest AppImage from [Releases](https://github.com/Tajwarbot/opencode/releases/latest).
+
+The installer downloads the AppImage to `~/.local/share/opencode-visuals`, adds `opencode-visuals` to `~/.local/bin`, and creates a desktop entry. It does not touch an existing OpenCode installation.
+
+The build disables auto-updates, so install a newer release to update it.
+
+## Build from source
+
+```bash
+git clone https://github.com/Tajwarbot/opencode.git
+cd opencode
+bun install
+bun run --cwd packages/cli build --single --skip-install
+bun run --cwd packages/desktop build
+OPENCODE_CHANNEL=dev bun run --cwd packages/desktop pack
+```
+
+`pack` writes the Linux AppImage, deb, and rpm to `dist/desktop`. The AppImage is the portable artifact used by the installer.
+
+## Limits
+
+- The generated `html` tier has no CDN, so it uses vanilla HTML, CSS, SVG, canvas, and JavaScript. Three.js stays in the typed `assembly` kind.
+- The generated frame cannot start a follow-up turn, open files, or read the workspace. Those actions belong to the typed catalog and the host.
+- Localization is partial. Commands and menu items follow the locale; the workbench and frame copy are English-first.
+- The desktop build is unsigned. Linux may ask you to mark the AppImage executable the first time.
+
+## Upstream README
+
+---
+
 <p align="center">
   <a href="https://opencode.ai">
     <picture>

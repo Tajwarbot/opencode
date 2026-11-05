@@ -218,12 +218,10 @@ export function getConfig() {
       return {
         ...base,
         appId,
-        productName: "OpenCode Dev",
-        publish: {
-          provider: "generic",
-          url: "https://opencode.ai/update/api/dev/desktop/opencode/",
-          channel: "latest",
-        },
+        productName: "OpenCode Visuals",
+        artifactName: "opencode-visuals-${os}-${arch}.${ext}",
+        protocols: { name: "OpenCode Visuals", schemes: ["opencode-visuals"] },
+        publish: null,
         deb: { fpm: [...previewCompressionFpm("deb"), metainfoFpm(appId)] },
         rpm: {
           packageName: "opencode-dev",
