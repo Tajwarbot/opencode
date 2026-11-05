@@ -1,6 +1,6 @@
 ---
 name: visual
-description: Use when the user asks to see, visualize, simulate, compare, or learn an engineering or technical concept, or when a mechanism, beam, stress state, cycle, tolerance stack, process flow, assembly, or agent task is easier to see than to read. Renders an inline interactive visual in the conversation. Not for ordinary tables, static labeled structures that Mermaid already covers, or project files.
+description: Use for any mechanical, industrial, or technical answer where a drawing, chart, mechanism, or interactive exhibit would prove the point, even when the user did not ask. Use whenever the user mentions visual, visualization, diagram, chart, animation, simulation, interactive, or asks to see something. Renders an inline interactive visual in the conversation. Not for ordinary tables, static labeled structures that Mermaid already covers, or project files.
 ---
 
 # Visual blocks
@@ -8,6 +8,10 @@ description: Use when the user asks to see, visualize, simulate, compare, or lea
 Write one fenced block with the `visual` language and a JSON spec. The desktop app replaces the fence with an interactive renderer that uses the host theme. The renderer owns the layout and the math; you supply the parameters and the claim.
 
 Use a visual when seeing or manipulating the thing answers the question. Keep prose to the claim and the takeaway. Do not restate the labels or the numbers in the visual.
+
+## Decide before you answer
+
+Before writing a technical answer, decide silently whether a visual would make the claim easier to see. If one would, include it. Do not ask the user whether they want a visual, and do not describe the decision. If the user asks for a visual, you must include at least one visual even when the topic is simple.
 
 ## When not to use it
 
@@ -23,7 +27,8 @@ Use a visual when seeing or manipulating the thing answers the question. Keep pr
 - `unit` names the units used by the numbers. `caption` is one sentence under the visual. `note` states assumptions or limits. `source` names the formula, standard, or reference.
 - Numbers carry units and a real basis. Every computed result must come from the supplied parameters. State the formula or assumption in `source` or `note`.
 - Keep specs under 256 kB. Keep series under eight, points under 4,000 per series, parts under forty, nodes under fourteen.
-- Use only the kinds below. Do not add HTML, JavaScript, colors, or CSS. The renderer colors every mark from the app theme.
+- Use a typed kind when the question matches the table below. Use `html` only when no typed kind fits.
+- For every typed kind, do not add HTML, JavaScript, colors, or CSS. The renderer colors every mark from the app theme. For `html`, follow the sandbox rules below.
 - Write the block after the prose that introduces it. Keep one claim per visual.
 
 ## Choosing a kind
@@ -41,6 +46,32 @@ Use a visual when seeing or manipulating the thing answers the question. Keep pr
 | What is the agent doing? | `task` |
 | What is the structure or decision path? | `diagram` |
 | How do two quantities compare? | `plot` |
+| No typed kind fits, and an interactive explainer, comparison, calculator, timeline, or custom layout would help? | `html` |
+
+## General-purpose HTML visuals
+
+`html` is the second tier. Use it for topics outside the engineering catalog: an interactive explainer, a comparison with controls, a one-off calculator, a timeline, a layout study, or a diagram that needs behavior. Do not use it for a topic a typed kind already covers.
+
+The document runs in an opaque iframe with scripts, no same-origin access, no network, no storage, and no bridge back to the app. Treat it as a sealed page.
+
+- Write a fragment, not a full document. Do not include `doctype`, `html`, `head`, or `body`.
+- Put styles in `css` and behavior in `js`. Avoid inline `<script>` tags.
+- Use the host theme: `var(--bg)`, `var(--surface)`, `var(--fg)`, `var(--muted)`, `var(--line)`, `var(--line-strong)`, `var(--accent)`, `var(--critical)`, `var(--success)`, `var(--font)`, `var(--mono)`, `var(--radius)`. Never hardcode a light or dark palette.
+- No external network: no CDN, remote fonts, remote images, `fetch`, `XMLHttpRequest`, `WebSocket`, `localStorage`, `sessionStorage`, cookies, or IndexedDB. Inline SVG, canvas, and data URLs are allowed.
+- Use semantic HTML, real buttons, labels, keyboard focus, and `aria-live` for computed results. Never inject user or fetched text with `innerHTML`.
+- Keep the page to one exhibit. No card grids, KPI dashboards, decorative borders, gradients, or fake data.
+- State assumptions and units inside the page when the result depends on them. Label illustrative numbers as sample data.
+- Limits: html 160 kB, css 40 kB, js 80 kB, overall 256 kB. `height` is optional, 160 to 1200 px. The frame also reports its content height.
+
+Quality bar:
+
+- One exhibit per block. Do not build a dashboard, a card grid, or a row of KPI tiles.
+- Use the host type scale: 13 px body, 11 to 12 px labels, one clear result at 19 to 24 px. Do not use display type inside the frame.
+- Use one accent for the active state or the primary result. Everything else uses `--fg`, `--muted`, `--line`, and `--surface`.
+- Prefer a single SVG, canvas, or diagram over rows of bordered boxes. Do not add gradients, glass panels, or decorative borders.
+- Every control has a visible label and a keyboard path. Use `aria-live` for computed output.
+- No invented numbers. If the data is illustrative, say so inside the frame and in `note`.
+- The frame is part of the conversation. Keep the chrome quiet and let the exhibit carry the claim.
 
 ## Minimum examples
 
@@ -60,6 +91,12 @@ Agent progress:
 
 ```visual
 {"v":1,"kind":"task","title":"Checking the gearbox","data":{"status":"running","steps":[{"label":"Read the brief","state":"done"},{"label":"Size the shaft","state":"active","detail":"6204 bearing"},{"label":"Check the pin","state":"pending"}]}}
+```
+
+General-purpose gear calculator:
+
+```visual
+{"v":1,"kind":"html","title":"A 3.2:1 gear pair trades speed for torque","height":360,"data":{"html":"<div class=\"panel\"><label>Input speed <input id=\"rpm\" type=\"range\" min=\"100\" max=\"3000\" value=\"900\"></label><output id=\"speed\" aria-live=\"polite\"></output><p class=\"note\">51-tooth wheel, 16-tooth pinion, 97% efficiency.</p></div>","css":".panel{display:grid;gap:14px;max-width:420px}label{display:grid;gap:6px;color:var(--muted)}output{font:600 24px var(--mono);color:var(--accent)}.note{margin:0;color:var(--muted);font-size:12px}","js":"const rpm=document.querySelector('#rpm'),out=document.querySelector('#speed'),ratio=51/16;const draw=()=>out.textContent=Math.round(+rpm.value/ratio)+' rpm';rpm.addEventListener('input',draw);draw()"}}
 ```
 
 Read `reference.md` in this skill for every field and the full examples.

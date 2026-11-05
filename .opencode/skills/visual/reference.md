@@ -239,6 +239,48 @@ Agent progress, not telemetry.
 - `annotations[].at` is `[x, y]`.
 - Use labels that state the quantity and unit. A chart with no unit is a sketch.
 
+## html
+
+General-purpose sandboxed UI. Use it only when no typed kind fits.
+
+```json
+{
+  "html": "<div class=\"panel\">...</div>",
+  "css": ".panel{display:grid;gap:12px}",
+  "js": "const el = document.querySelector('.panel'); el.dataset.ready = 'true'"
+}
+```
+
+- `html` is required. `css` and `js` are optional strings. The document is a fragment, not a full page.
+- The frame has `sandbox="allow-scripts"` without same-origin. It has no network, no storage, no cookies, no parent DOM access, and no bridge back to the app.
+- Use only `var(--bg)`, `var(--surface)`, `var(--fg)`, `var(--muted)`, `var(--line)`, `var(--line-strong)`, `var(--accent)`, `var(--critical)`, `var(--success)`, `var(--font)`, `var(--mono)`, and `var(--radius)` for theme values.
+- The page is measured after load and after every resize. Set `height` when the initial layout must reserve space before scripts run; the frame clamps it to 160 through 1200 pixels.
+- Limits: html 160 kB, css 40 kB, js 80 kB, overall 256 kB.
+- Do not use external scripts, styles, fonts, images, `fetch`, `XMLHttpRequest`, `WebSocket`, `localStorage`, `sessionStorage`, cookies, IndexedDB, or `window.parent`.
+- Prefer one exhibit. Use real controls with labels, keyboard focus, and `aria-live` for computed output.
+- Label sample data, assumptions, and units inside the page. Do not invent live data or sources.
+
+Full example:
+
+```json
+{
+  "v": 1,
+  "kind": "html",
+  "title": "A 3.2:1 gear pair trades speed for torque",
+  "subtitle": "16-tooth pinion, 51-tooth wheel, 97% efficiency",
+  "height": 400,
+  "unit": "rpm, N·m, kW",
+  "data": {
+    "html": "<div class=\"panel\"><label>Input speed <input id=\"rpm\" type=\"range\" min=\"100\" max=\"3000\" value=\"900\"></label><div class=\"readout\"><span>Output speed</span><strong id=\"speed\" aria-live=\"polite\"></strong></div><p class=\"note\">The wheel turns 3.19 times slower and 3.19 times stronger, less the mesh loss.</p></div>",
+    "css": ".panel{display:grid;gap:14px;max-width:440px}label{display:grid;gap:6px;color:var(--muted)}.readout{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-top:12px;border-top:1px solid var(--line)}.readout span{color:var(--muted)}.readout strong{font:600 24px var(--mono);color:var(--accent)}.note{margin:0;color:var(--muted);font-size:12px}",
+    "js": "const rpm=document.querySelector('#rpm'),out=document.querySelector('#speed'),ratio=51/16;const draw=()=>out.textContent=Math.round(+rpm.value/ratio)+' rpm';rpm.addEventListener('input',draw);draw()"
+  },
+  "caption": "The same mesh that lowers speed raises torque.",
+  "note": "Ideal ratio; mesh efficiency is illustrative.",
+  "source": "Gear ratio i = z2 / z1"
+}
+```
+
 ## Review checklist
 
 Before writing the block, check:
@@ -248,3 +290,5 @@ Before writing the block, check:
 - Every number is either supplied by the user, computed by the renderer, or clearly labeled as an assumption.
 - The visual is the smallest one that proves the claim.
 - The block has a caption and an assumption or source when the result depends on a model.
+- If the block is `html`, it uses theme tokens, has no external network, and shows one exhibit rather than a dashboard.
+- If the user asked for a visual, at least one visual is present.

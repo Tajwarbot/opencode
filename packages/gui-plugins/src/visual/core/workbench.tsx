@@ -85,7 +85,7 @@ export function Workbench(props: {
           <div class="vw-empty">
             <p class="vw-empty-title">No visuals yet.</p>
             <p class="vw-empty-body">
-              Ask for a diagram, a mechanism, a beam calculation, or an assembly. The assistant writes a{" "}
+              Ask for a diagram, a mechanism, a beam calculation, an assembly, or a generated interface. The assistant writes a{" "}
               <code>visual</code> code block and it renders here and inline in the conversation.
             </p>
             <pre class="vw-sample">{SAMPLE}</pre>

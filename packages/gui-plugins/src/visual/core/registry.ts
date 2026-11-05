@@ -24,6 +24,8 @@ const FlowVisual = lazy(() => import("./renderers/flow").then((module) => ({ def
 
 const AssemblyVisual = lazy(() => import("./renderers/assembly").then((module) => ({ default: module.AssemblyVisual })))
 
+const HtmlVisual = lazy(() => import("./renderers/html").then((module) => ({ default: module.HtmlVisual })))
+
 export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec }>> = {
   diagram: DiagramVisual,
   plot: PlotVisual,
@@ -36,4 +38,5 @@ export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec 
   flow: FlowVisual,
   assembly: AssemblyVisual,
   task: TaskVisual,
+  html: HtmlVisual,
 }

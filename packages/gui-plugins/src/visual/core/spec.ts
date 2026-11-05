@@ -1,4 +1,5 @@
 /* oxlint-disable anti-slop/no-runtime-typeof, anti-slop/require-safety-comment-for-type-assertion -- this parser is the boundary for model-authored JSON: it validates the kind and title, then narrows to the domain types. */
+import { HTML_LIMITS, htmlBytes } from "./html-sandbox"
 import { isObject, type Json } from "./json"
 
 /**
@@ -30,6 +31,7 @@ export const VISUAL_KINDS = [
   "flow",
   "assembly",
   "task",
+  "html",
 ] as const
 
 export type VisualKind = (typeof VISUAL_KINDS)[number]
@@ -72,6 +74,34 @@ export function parseVisual(source: string): ParseResult {
 
   if (typeof title !== "string" || title.trim().length === 0)
     return { ok: false, error: "A visual needs a title." }
+
+  if (kind === "html") {
+    if (!isObject(parsed.data)) return { ok: false, error: "An html visual needs a data object with a non-empty html string." }
+
+    const html = parsed.data.html
+
+    if (typeof html !== "string" || html.trim().length === 0)
+      return { ok: false, error: "An html visual needs a non-empty data.html string." }
+
+    if (htmlBytes(html) > HTML_LIMITS.html)
+      return { ok: false, error: `The html body is larger than ${HTML_LIMITS.html / 1000} kB.` }
+
+    const css = parsed.data.css
+
+    if (css !== undefined && typeof css !== "string")
+      return { ok: false, error: "data.css must be a string." }
+
+    if (typeof css === "string" && htmlBytes(css) > HTML_LIMITS.css)
+      return { ok: false, error: `The html CSS is larger than ${HTML_LIMITS.css / 1000} kB.` }
+
+    const js = parsed.data.js
+
+    if (js !== undefined && typeof js !== "string")
+      return { ok: false, error: "data.js must be a string." }
+
+    if (typeof js === "string" && htmlBytes(js) > HTML_LIMITS.js)
+      return { ok: false, error: `The html script is larger than ${HTML_LIMITS.js / 1000} kB.` }
+  }
 
   return {
     ok: true,

@@ -89,6 +89,7 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
 
   const open = (session = ctx.sessions.current(), once = false) => {
     if (!session) return
+
     if (once && opened.has(session.key)) return
 
     opened.add(session.key)

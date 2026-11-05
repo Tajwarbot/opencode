@@ -14,6 +14,7 @@ export const KIND_LABEL: Record<VisualKind, string> = {
   flow: "Process flow",
   assembly: "Assembly",
   task: "Task",
+  html: "Generated UI",
 }
 
 export function VisualFrame(props: {

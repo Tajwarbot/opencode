@@ -95,3 +95,48 @@ describe("parseVisual", () => {
     expect(result.spec.data).toEqual({})
   })
 })
+
+
+describe("parseVisual html", () => {
+  test("accepts a general-purpose html visual", () => {
+    const result = parseVisual(
+      JSON.stringify({
+        v: 1,
+        kind: "html",
+        title: "A gear train trades speed for torque",
+        height: 420,
+        data: { html: "<div id=\"app\"></div>", css: "#app{height:40px}", js: "document.querySelector('#app').textContent = 'ok'" },
+      }),
+    )
+
+    expect(result.ok).toBe(true)
+
+    if (!result.ok) return
+    expect(result.spec.kind).toBe("html")
+    expect(result.spec.data).toEqual({ html: "<div id=\"app\"></div>", css: "#app{height:40px}", js: "document.querySelector('#app').textContent = 'ok'" })
+  })
+
+  test("rejects html without a document", () => {
+    const result = parseVisual(JSON.stringify({ v: 1, kind: "html", title: "Empty", data: { css: "body{}" } }))
+    expect(result.ok).toBe(false)
+
+    if (result.ok) return
+    expect(result.error).toContain("data.html")
+  })
+
+  test("rejects an oversized html body", () => {
+    const result = parseVisual(JSON.stringify({ v: 1, kind: "html", title: "Huge", data: { html: "x".repeat(160_001) } }))
+    expect(result.ok).toBe(false)
+
+    if (result.ok) return
+    expect(result.error).toContain("html body")
+  })
+
+  test("rejects a non-string stylesheet", () => {
+    const result = parseVisual(JSON.stringify({ v: 1, kind: "html", title: "Bad css", data: { html: "<p>ok</p>", css: 3 } }))
+    expect(result.ok).toBe(false)
+
+    if (result.ok) return
+    expect(result.error).toContain("data.css")
+  })
+})
