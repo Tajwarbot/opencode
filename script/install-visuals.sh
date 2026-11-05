@@ -51,7 +51,13 @@ echo "Downloading $url"
 curl -fL "$url" -o "$app"
 chmod +x "$app"
 
-ln -sf "$app" "$BIN_DIR/opencode-visuals"
+launcher="$BIN_DIR/opencode-visuals"
+rm -f "$launcher"
+cat >"$launcher" <<EOF
+#!/usr/bin/env bash
+exec env APPIMAGE_EXTRACT_AND_RUN=1 "$app" --ozone-platform=x11 "\$@"
+EOF
+chmod +x "$launcher"
 
 curl -fsSL "https://raw.githubusercontent.com/$REPO/dev/packages/desktop/icons/dev/128x128.png" -o "$ICON_DIR/opencode-visuals.png" || true
 
@@ -60,7 +66,7 @@ cat >"$DESKTOP_DIR/opencode-visuals.desktop" <<EOF
 Type=Application
 Name=OpenCode Visuals
 Comment=OpenCode with generative engineering and general-purpose visuals
-Exec=$app %U
+Exec=$launcher %U
 Icon=opencode-visuals
 Terminal=false
 Categories=Development;
