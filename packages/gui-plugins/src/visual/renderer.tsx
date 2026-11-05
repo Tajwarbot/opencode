@@ -6,6 +6,7 @@ import {
   MenuItem,
   Panel,
   Style,
+  type MountedSession,
   type PanelTab,
   type Plugin,
 } from "@opencode/plugin/gui"
@@ -84,20 +85,47 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
     }
   }
 
-  const open = (session = ctx.sessions.current()) => {
+  const opened = new Set<string>()
+
+  const open = (session = ctx.sessions.current(), once = false) => {
     if (!session) return
+    if (once && opened.has(session.key)) return
+
+    opened.add(session.key)
 
     if (ctx.layout.narrow()) ctx.layout.open(key, session)
     else ctx.layout.open(key, session, { tab: "select" })
   }
 
-  const Inline = (props: { code: string; sessionKey: string }) => {
-    onMount(() => remember(props.sessionKey, props.code))
+  const VisualBlock = (props: {
+    code: string
+    title: string
+    kind: string
+    session?: MountedSession
+  }) => {
+    onMount(() => {
+      if (!props.session) return
+
+      remember(props.session.key, props.code)
+
+      if (ctx.appearance.visualDisplay() === "panel") queueMicrotask(() => open(props.session, true))
+    })
 
     return (
-      <div class="vz-inline">
-        <VisualView code={props.code} context="inline" />
-      </div>
+      <Show
+        when={ctx.appearance.visualDisplay() === "inline"}
+        fallback={
+          <button type="button" class="vz-open" onClick={() => open(props.session)}>
+            <span class="vz-open-kind">{props.kind}</span>
+            <span class="vz-open-title">{props.title}</span>
+            <span class="vz-open-action">Open in panel</span>
+          </button>
+        }
+      >
+        <div class="vz-inline">
+          <VisualView code={props.code} context="inline" />
+        </div>
+      </Show>
     )
   }
 
@@ -130,9 +158,18 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
   ctx.add(CodeBlock, {
     languages: ["visual", "genui"],
     render: (props) => {
-      if (!parseVisual(props.code).ok) return undefined
+      const parsed = parseVisual(props.code)
 
-      return <Inline code={props.code} sessionKey={props.session?.key ?? "local"} />
+      if (!parsed.ok) return undefined
+
+      return (
+        <VisualBlock
+          code={props.code}
+          title={parsed.spec.title}
+          kind={parsed.spec.kind}
+          session={props.session}
+        />
+      )
     },
   })
 
