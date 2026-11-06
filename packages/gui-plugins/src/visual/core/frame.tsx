@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, onMount, Show, type JSX } from "solid-js"
 import { CloseIcon, ExpandIcon, IconButton, ResetIcon } from "./controls"
+import { useEmbedded } from "./embed"
 import type { VisualKind, VisualSpec } from "./spec"
 
 export const KIND_LABEL: Record<VisualKind, string> = {
@@ -29,6 +30,7 @@ export function VisualFrame(props: {
   note?: string
   onReset?: () => void
 }) {
+  const embedded = useEmbedded()
   const [full, setFull] = createSignal(false)
   let card: HTMLDivElement | undefined
   let trigger: HTMLElement | undefined
@@ -68,6 +70,16 @@ export function VisualFrame(props: {
   })
 
   return (
+    <Show
+      when={!embedded}
+      fallback={
+        <div class="vz-embed">
+          <div class="vz-embed-stage">{props.stage}</div>
+          <Show when={props.readouts}>{props.readouts}</Show>
+          <Show when={props.controls}>{props.controls}</Show>
+        </div>
+      }
+    >
       <div
         ref={card}
         class="vz"
@@ -133,7 +145,8 @@ export function VisualFrame(props: {
             </Show>
           </footer>
         </Show>
-    </div>
+      </div>
+    </Show>
   )
 }
 

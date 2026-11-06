@@ -1,3 +1,13 @@
+.vz-embed {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.vz-embed-stage {
+  min-width: 0;
+}
+
 .vza-root {
   display: flex;
   flex-direction: column;

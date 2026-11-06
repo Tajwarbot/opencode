@@ -1,18 +1,38 @@
 import { For, Index, Show } from "solid-js"
+import { Dynamic } from "solid-js/web"
 import {
   array,
   bool,
   isObject,
   num,
+  object,
   objects,
   optionalNum,
   optionalStr,
   str,
   type Json,
 } from "../json"
+import { EmbeddedContext } from "../embed"
+import { RENDERERS } from "../registry"
+import type { VisualSpec } from "../spec"
 import { pathOf, stringList } from "./surface"
 import { Scene } from "./scene"
 import type { CatalogComponent, CatalogProps } from "./types"
+
+/** Typed renderers a page may embed. `a2ui` and `html` stay out: one would recurse, the other is sandbox-only. */
+const TYPED = [
+  "diagram",
+  "plot",
+  "mechanism",
+  "beam",
+  "mohr",
+  "stress-strain",
+  "pv",
+  "tolerance",
+  "flow",
+  "assembly",
+  "task",
+] as const satisfies ReadonlyArray<VisualSpec["kind"]>
 
 export const CATALOG = {
   Column,
@@ -29,6 +49,7 @@ export const CATALOG = {
   Callout,
   Steps,
   Scene,
+  Typed,
 } satisfies Record<string, CatalogComponent>
 
 /** The entry for a component name, or undefined when the name is not in the catalog. */
@@ -300,6 +321,52 @@ function Steps(props: CatalogProps) {
       </Index>
     </ol>
   )
+}
+
+function Typed(props: CatalogProps) {
+  const kind = () => typedKind(str(props.props().kind, ""))
+
+  const component = () => {
+    const name = kind()
+
+    return name ? RENDERERS[name] : undefined
+  }
+
+  const spec = (): VisualSpec => {
+    const base: VisualSpec = {
+      v: 1,
+      kind: kind() ?? "diagram",
+      title: str(props.props().title, "Typed visual"),
+      data: object(props.props().data) ?? {},
+    }
+
+    const subtitle = optionalStr(props.props().subtitle)
+    const note = optionalStr(props.props().note)
+    const withSubtitle = subtitle ? { ...base, subtitle } : base
+
+    return note ? { ...withSubtitle, note } : withSubtitle
+  }
+
+  return (
+    <Show
+      when={component()}
+      fallback={
+        <div class="vza-unknown">
+          <span>{str(props.props().kind, "typed")}</span>
+        </div>
+      }
+    >
+      {(entry) => (
+        <EmbeddedContext.Provider value={true}>
+          <Dynamic component={entry()} spec={spec()} />
+        </EmbeddedContext.Provider>
+      )}
+    </Show>
+  )
+}
+
+function typedKind(value: string) {
+  return TYPED.find((kind) => kind === value)
 }
 
 function childIds(props: CatalogProps) {

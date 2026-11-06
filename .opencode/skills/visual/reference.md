@@ -284,6 +284,9 @@ Catalog:
 | `Callout` | `tone` (`info`, `warn`, `critical`, `success`), `title`, `text` |
 | `Steps` | `items` as `[{ "label", "state", "detail" }]`, state `done`, `active`, `pending` |
 | `Scene` | `view` (`width`, `height`, `grid`), `label`, `shapes` |
+| `Typed` | `kind` (a typed renderer), `title`, `subtitle`, `note`, `data` (that renderer's payload) |
+
+`Typed` embeds an engineering renderer inside the page, so a beam, plot, mechanism, or assembly can sit beside text and controls. Use it instead of rebuilding a typed visual from Scene marks. The embedded renderer keeps its stage and controls but drops its own card header.
 
 Scene shapes:
 

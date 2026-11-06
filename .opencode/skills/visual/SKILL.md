@@ -60,6 +60,8 @@ Before writing a technical answer, decide silently whether a visual would make t
 - Use `Scene` for drawings: line, arrow, circle, rect, path, polygon, text, and group. Groups take `translate`, `rotate`, and `scale`; `animate` spins a group.
 - Stream in order: `createSurface` with the root and static parts, then `updateComponents` for controls and details, then `updateDataModel`. Keep each message small so the page builds progressively.
 - Use a typed renderer for engineering calculations. Use `a2ui` to explain, compare, lay out, or draw. Use `html` only when the catalog cannot express the interaction.
+- Embed a typed renderer inside a page with the `Typed` component when the page needs a beam, plot, mechanism, or another engineering view beside its text and controls. Set `kind` to the typed kind and `data` to that kind's payload.
+- MCP Apps from connected servers render automatically on their tool calls. Do not write an `a2ui` or `html` block for a server that already provides a `ui://` resource.
 
 ## General-purpose HTML visuals
 

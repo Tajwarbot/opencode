@@ -203,3 +203,58 @@ story("a streamed visual that ends invalid falls back to its code", async ({ pag
   await expect(block.locator("pre")).toBeVisible()
   await expect(block.locator(".vz")).toHaveCount(0)
 })
+
+story("an A2UI page embeds a typed renderer", async ({ page }) => {
+  const host = await page.evaluateHandle(async (fixture) => {
+    const { builtins, mountCodeBlocks, until } = await import(fixture)
+    const visual = builtins.find((entry: { id: string }) => entry.id === "visual")
+
+    if (!visual) throw new Error("The visual built-in is missing.")
+
+    const host: CodeBlocksHost = mountCodeBlocks({ definitions: [visual] })
+
+    const spec = {
+      v: 1,
+      kind: "a2ui",
+      title: "Embedded plot",
+      data: {
+        messages: [
+          {
+            version: "1.0",
+            createSurface: {
+              surfaceId: "main",
+              components: [
+                { id: "root", component: "Column", children: ["plot"] },
+                {
+                  id: "plot",
+                  component: "Typed",
+                  kind: "plot",
+                  title: "Stress amplitude",
+                  data: {
+                    x: { domain: [0, 10] },
+                    y: { domain: [0, 10] },
+                    series: [{ label: "A", points: [[0, 0], [5, 6], [10, 9]] }],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    }
+
+    await until(() => host.status("visual") === "active")
+    host.show(`\`\`\`visual\n${JSON.stringify(spec)}\n\`\`\`\n`)
+
+    return host
+  }, fixture)
+
+  const block = page.getByTestId("code-blocks").locator('[data-component="markdown-code"]')
+
+  await expect(block.getByRole("heading", { name: "Embedded plot" })).toBeVisible()
+  await expect(block.locator(".vz-embed svg").first()).toBeVisible()
+  await expect(block.locator('path.vz-line-accent')).toHaveCount(1)
+
+  await host.evaluate((host) => host.show('```visual\n{"v":1,"kind":"plot","title":"Replaced","data":{"series":[{"points":[[1,1]]}]}}\n```\n'))
+  await expect(block.getByRole("heading", { name: "Replaced" })).toBeVisible()
+})
