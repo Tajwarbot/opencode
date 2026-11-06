@@ -17,19 +17,15 @@ jobs:
         include:
           - os: ubuntu-24.04
             target: linux-x64
-            cli_target: linux-x64-baseline
             package: --linux AppImage deb rpm --x64
           - os: windows-2025
             target: windows-x64
-            cli_target: windows-x64-baseline
             package: --win nsis --x64
           - os: macos-26
             target: darwin-arm64
-            cli_target: darwin-arm64
             package: --mac dmg zip --arm64 -c.mac.identity=null
           - os: macos-26-intel
             target: darwin-x64
-            cli_target: darwin-x64-baseline
             package: --mac dmg zip --x64 -c.mac.identity=null
     runs-on: ${{ matrix.os }}
     steps:
@@ -42,13 +38,11 @@ jobs:
       - run: bun install
         env:
           HUSKY: "0"
-      - run: bun run --cwd packages/cli build --skip-install
-        env:
-          OPENCODE_TARGET: ${{ matrix.cli_target }}
       - run: bun run --cwd packages/desktop build
         env:
           OPENCODE_CHANNEL: dev
           OPENCODE_TARGET: ${{ matrix.target }}
+          OPENCODE_CLI_VERSION: "2.2.5"
       - run: bunx electron-builder ${{ matrix.package }} --publish never --config electron-builder.config.ts
         working-directory: packages/desktop
         env:

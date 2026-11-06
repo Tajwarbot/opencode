@@ -20,14 +20,16 @@ await $`bun ./script/copy-icons.ts ${channel}`
 
 await $`bun ./script/copy-metainfo.ts ${channel}`
 
-const built = await exists(path.join(cli, getCurrentCli().package.replace("@opencode/", "")))
+const requestedCli = process.env.OPENCODE_CLI_VERSION
 
-if (channel === "prod" && !built)
+const built = requestedCli ? false : await exists(path.join(cli, getCurrentCli().package.replace("@opencode/", "")))
+
+if (channel === "prod" && !built && !requestedCli)
   throw new Error(`Production desktop builds bundle the CLI from ${cli}; build it first`)
 
 if (built) await copyBuiltCliToResources(cli)
 
-if (!built) await downloadCliToResources(channel === "beta" ? "beta" : undefined)
+if (!built) await downloadCliToResources(requestedCli ?? (channel === "beta" ? "beta" : undefined))
 
 await $`bunx electron-vite build`
 
