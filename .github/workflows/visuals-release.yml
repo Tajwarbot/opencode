@@ -1,0 +1,89 @@
+name: visuals-release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "visuals-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-x64
+            package: --linux AppImage deb rpm --x64
+          - os: windows-2025
+            target: windows-x64
+            package: --win nsis --x64
+          - os: macos-26
+            target: darwin-arm64
+            package: --mac dmg zip --arm64 -c.mac.identity=null
+          - os: macos-26-intel
+            target: darwin-x64
+            package: --mac dmg zip --x64 -c.mac.identity=null
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+      - run: bun install
+        env:
+          HUSKY: "0"
+      - run: bun run --cwd packages/cli build --skip-install
+        env:
+          OPENCODE_TARGET: ${{ matrix.target }}
+      - run: bun run --cwd packages/desktop build
+        env:
+          OPENCODE_CHANNEL: dev
+          OPENCODE_TARGET: ${{ matrix.target }}
+      - run: bunx electron-builder ${{ matrix.package }} --publish never --config electron-builder.config.ts
+        working-directory: packages/desktop
+        env:
+          OPENCODE_CHANNEL: dev
+          OPENCODE_TARGET: ${{ matrix.target }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visuals-${{ matrix.target }}
+          path: |
+            packages/desktop/dist/*.AppImage
+            packages/desktop/dist/*.deb
+            packages/desktop/dist/*.rpm
+            packages/desktop/dist/*.exe
+            packages/desktop/dist/*.dmg
+            packages/desktop/dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/visuals-v')
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - run: cd artifacts && sha256sum * > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          body: |
+            OpenCode Visuals is a fork of OpenCode with a built-in generative visual layer.
+
+            Linux AppImage, deb, and rpm; Windows x64 NSIS installer; macOS arm64 and x64 dmg.
+
+            Linux install:
+            `curl -fsSL https://raw.githubusercontent.com/Tajwarbot/opencode/dev/script/install-visuals.sh | bash`
+
+            Windows and macOS: download the installer below.
+
+            The desktop build is unsigned. macOS may require Open Anyway in System Settings.

@@ -66,6 +66,9 @@ if (!app && os === "win") {
 // electron-updater reads its feed from that file, so write the one those targets would.
 async function writeUpdateConfig(resources: string) {
   const publish = getConfig().publish
+
+  if (!publish) return
+
   const name: string = (await Bun.file("package.json").json()).name
   await Bun.write(
     path.join(resources, "app-update.yml"),
