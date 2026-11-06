@@ -9,6 +9,7 @@ The model makes the decision in its own response. There is no separate router an
 - **Typed engineering visuals:** mechanism, beam, Mohr circle, stress-strain, pressure-volume cycle, tolerance stack, process flow, exploded assembly, task state, diagram, and plot.
 - **General-purpose generated UI:** an `html` kind for interactive explainers, comparisons, calculators, timelines, layouts, and one-off diagrams that do not fit the engineering catalog.
 - **One visual format:** a fenced `visual` block with a small JSON spec. Typed kinds keep the math and units inside the renderer. The `html` kind runs in an opaque iframe with no network, storage, parent access, or host bridge.
+- **Progressive drawing:** the visual mounts as soon as its fence starts and draws while the model writes. A plot with a declared domain keeps its axes fixed, so the line grows into place instead of rescaling.
 - **Appearance > Visuals:** choose inline in chat or the side panel. The choice is stored as `appearance.visuals` and exposed to plugins as `ctx.appearance.visualDisplay()`.
 - **A session workbench, composer pill, `/visual` command, and `visual` skill.**
 
@@ -16,7 +17,7 @@ The typed tier stays the default for engineering. The generated tier exists for 
 
 ## Upstream
 
-The feature is proposed upstream in [anomalyco/opencode#62258](https://github.com/anomalyco/opencode/issues/62258). The typed catalog is in draft PR [#62268](https://github.com/anomalyco/opencode/pull/62268).
+The feature is proposed upstream in [anomalyco/opencode#62258](https://github.com/anomalyco/opencode/issues/62258). The core layer and `plot` renderer are in draft PR [#62287](https://github.com/anomalyco/opencode/pull/62287); the workbench, renderer groups, and skill follow as focused PRs.
 
 ## Install
 
