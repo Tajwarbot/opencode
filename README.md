@@ -32,7 +32,13 @@ curl -fsSL https://raw.githubusercontent.com/Tajwarbot/opencode/dev/script/insta
 
 The installer downloads the AppImage to `~/.local/share/opencode-visuals`, adds `opencode-visuals` to `~/.local/bin`, and creates a desktop entry. The launcher uses XWayland when the session is Wayland and extracts the AppImage when FUSE is unavailable. It does not touch an existing OpenCode installation.
 
-Windows and macOS users download the installer from Releases. The build is unsigned, so macOS may require Open Anyway in System Settings.
+Debian and Ubuntu can install the `.deb` asset directly:
+
+```bash
+sudo apt install ./opencode-visuals-linux-amd64.deb
+```
+
+Fedora and other rpm distributions can install the `.rpm` asset. Windows and macOS users download the installer from Releases. The build is unsigned, so macOS may require Open Anyway in System Settings.
 
 The build does not use the upstream update feed. Install a newer release to update it.
 
