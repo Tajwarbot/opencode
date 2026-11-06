@@ -1,0 +1,86 @@
+.mcp-app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 0.5px solid var(--v2-border-border-base);
+  border-radius: 10px;
+  background: var(--v2-background-bg-layer-01);
+}
+
+.mcp-app-title {
+  padding: 8px 12px;
+  border-bottom: 0.5px solid var(--v2-border-border-base);
+  color: var(--v2-text-text-muted);
+  font-family: var(--v2-font-family-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: var(--line-height-compact);
+}
+
+.mcp-app-frame {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color-scheme: light dark;
+}
+
+.mcp-app-loading {
+  display: grid;
+  gap: 10px;
+  min-height: 120px;
+  padding: 16px;
+}
+
+.mcp-app-loading span {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--v2-background-bg-layer-02);
+  animation: mcp-app-pulse 1.6s ease-in-out infinite;
+}
+
+.mcp-app-loading span:first-child {
+  width: 38%;
+}
+
+.mcp-app-loading span:last-child {
+  width: 66%;
+}
+
+.mcp-app-error {
+  margin: 0;
+  padding: 12px;
+  color: var(--v2-text-text-danger);
+  font-family: var(--v2-font-family-sans);
+  font-size: 12px;
+  line-height: var(--line-height-compact);
+}
+
+.mcp-app-fallback {
+  margin: 0;
+  padding: 0 12px 12px;
+  color: var(--v2-text-text-base);
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  line-height: var(--line-height-compact);
+  white-space: pre-wrap;
+}
+
+@keyframes mcp-app-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcp-app-loading span {
+    animation: none;
+  }
+}

@@ -16,6 +16,7 @@ import {
   Index,
   on,
   untrack,
+  useContext,
   type JSX,
 } from "solid-js"
 import { createStore } from "solid-js/store"
@@ -47,8 +48,11 @@ import { AnimatedNumber } from "@opencode/ui/animated-number"
 import { changedFileDiff, patchFileGroups } from "../components/apply-patch-file"
 import { animate } from "@kitlangton/solid-motion"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
+import { McpAppsContext } from "../context/mcp-apps"
+import { McpAppView } from "./mcp-app-frame"
 import type {
   FileDiffInfo,
+  JsonValue,
   SessionMessageAssistantReasoning,
   SessionMessageAssistantTool,
   SessionMessageShell,
@@ -1337,6 +1341,33 @@ function ToolFileAccordion(props: {
 }
 
 export function ToolDisplay(
+  props: ToolProps & {
+    id: string
+    error?: string
+  },
+) {
+  const mcp = useContext(McpAppsContext)
+  const app = createMemo(() => mcp?.apps().find((entry) => entry.name === props.tool))
+
+  return (
+    <Show when={app()} fallback={<DefaultToolDisplay {...props} />}>
+      {(entry) => (
+        <div data-component="tool-part-wrapper" data-timeline-part-id={props.id}>
+          <McpAppView
+            app={entry()}
+            // SAFETY: tool input decoded from the model is JSON; the open record only widens its value type.
+            input={props.input as Record<string, JsonValue>}
+            output={props.output}
+            status={props.status}
+            error={props.error}
+          />
+        </div>
+      )}
+    </Show>
+  )
+}
+
+function DefaultToolDisplay(
   props: ToolProps & {
     id: string
     error?: string
