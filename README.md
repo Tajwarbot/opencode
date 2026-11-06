@@ -14,6 +14,10 @@ The model makes the decision in its own response. There is no separate router an
 
 The typed tier stays the default for engineering. The generated tier exists for the long tail. Adding a visual kind means adding a renderer; the `html` kind is the escape hatch when a typed kind does not fit.
 
+## Upstream
+
+The feature is proposed upstream in [anomalyco/opencode#62258](https://github.com/anomalyco/opencode/issues/62258). The typed catalog is in draft PR [#62268](https://github.com/anomalyco/opencode/pull/62268).
+
 ## Install
 
 Download the latest build from [Releases](https://github.com/Tajwarbot/opencode/releases/latest). It installs as **OpenCode Visuals**, next to the original OpenCode, with its own profile at `~/.config/ai.opencode.desktop.dev`.
