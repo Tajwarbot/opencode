@@ -71,15 +71,17 @@ export function McpAppHostProvider(props: ParentProps) {
 
       if (!comment) return
 
-      prompt.context.add({
-        type: "note",
+      const note = {
+        type: "note" as const,
         origin: "mcp-app",
         label: "MCP App context",
         icon: "sparkles",
         subject: "MCP App",
         comment,
         commentID: `mcp-app-${Date.now()}`,
-      })
+      }
+
+      prompt.context.replaceComments([note])
     },
     openLink: (url) => {
       const target = safeURL(url)
