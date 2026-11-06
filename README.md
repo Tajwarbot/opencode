@@ -44,7 +44,13 @@ sudo apt install ./opencode-visuals-linux-amd64.deb
 
 Fedora and other rpm distributions can install the `.rpm` asset. Windows and macOS users download the installer from Releases. The build is unsigned, so macOS may require Open Anyway in System Settings.
 
-The build does not use the upstream update feed. Install a newer release to update it.
+## Updates
+
+On Linux, the launcher checks the latest GitHub release at most once every six hours. When a newer release is published, it downloads the AppImage in the background, verifies the SHA256 checksum, stages it, and applies it atomically on the next launch. A desktop notification says when the update is ready. An offline launch is unaffected.
+
+Rerun the installer once to add this launcher to an existing Linux install.
+
+Windows and macOS still use the release installers. Automatic updates there need code signing and a separate updater.
 
 ## Build from source
 

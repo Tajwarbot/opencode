@@ -55,12 +55,16 @@ chmod +x "$tmp"
 mv -f "$tmp" "$app"
 trap - EXIT
 
+tag="$(printf '%s' "$release" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
+published="$(printf '%s' "$release" | sed -n 's/.*"published_at": *"\([^"]*\)".*/\1/p' | head -1)"
+printf '%s\n%s\n' "$tag" "$published" > "$APP_DIR/release"
+
 launcher="$BIN_DIR/opencode-visuals"
 rm -f "$launcher"
-cat >"$launcher" <<EOF
-#!/usr/bin/env bash
-exec env APPIMAGE_EXTRACT_AND_RUN=1 "$app" --ozone-platform=x11 "\$@"
-EOF
+if ! curl -fsSL "https://raw.githubusercontent.com/$REPO/dev/script/visuals-launcher.sh" -o "$launcher"; then
+  echo "Could not download the launcher." >&2
+  exit 1
+fi
 chmod +x "$launcher"
 
 curl -fsSL "https://raw.githubusercontent.com/$REPO/dev/packages/desktop/icons/dev/128x128.png" -o "$ICON_DIR/opencode-visuals.png" || true
