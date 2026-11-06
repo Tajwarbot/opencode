@@ -222,9 +222,9 @@ export function getConfig() {
         artifactName: "opencode-visuals-${os}-${arch}.${ext}",
         protocols: { name: "OpenCode Visuals", schemes: ["opencode-visuals"] },
         publish: null,
-        deb: { fpm: [...previewCompressionFpm("deb"), metainfoFpm(appId)] },
+        deb: { packageName: "opencode-visuals", fpm: [...previewCompressionFpm("deb"), metainfoFpm(appId)] },
         rpm: {
-          packageName: "opencode-dev",
+          packageName: "opencode-visuals",
           fpm: [rpmNoBuildIdLinksFpm, ...previewCompressionFpm("rpm"), metainfoFpm(appId)],
         },
       }
