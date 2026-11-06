@@ -4,7 +4,7 @@ import { parseVisualStream, type StreamParse } from "./spec"
 import { RENDERERS } from "./registry"
 
 /** Reparsing every chunk of a long spec costs more than the drawing it enables, so parse on a fixed length step. */
-const PARSE_STEP = 192
+const PARSE_STEP = 48
 
 /**
  * Renders one visual from its fenced block. Inline blocks keep the code for a malformed spec, because returning
