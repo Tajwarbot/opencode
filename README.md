@@ -52,8 +52,7 @@ The build does not use the upstream update feed. Install a newer release to upda
 git clone https://github.com/Tajwarbot/opencode.git
 cd opencode
 bun install
-bun run --cwd packages/cli build --single --skip-install
-bun run --cwd packages/desktop build
+OPENCODE_CHANNEL=dev OPENCODE_CLI_VERSION=2.2.5 bun run --cwd packages/desktop build
 OPENCODE_CHANNEL=dev bun run --cwd packages/desktop pack
 ```
 
