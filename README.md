@@ -16,17 +16,23 @@ The typed tier stays the default for engineering. The generated tier exists for 
 
 ## Install
 
-The current build is a Linux x86_64 AppImage. It installs as **OpenCode Visuals**, next to the original OpenCode, with its own profile at `~/.config/ai.opencode.desktop.dev`.
+Download the latest build from [Releases](https://github.com/Tajwarbot/opencode/releases/latest). It installs as **OpenCode Visuals**, next to the original OpenCode, with its own profile at `~/.config/ai.opencode.desktop.dev`.
 
-One command:
+| Platform | Asset |
+| --- | --- |
+| Linux x86_64 | AppImage, deb, rpm |
+| Windows x64 | NSIS installer |
+| macOS arm64 and x64 | dmg |
+
+Linux one command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Tajwarbot/opencode/dev/script/install-visuals.sh | bash
 ```
 
-Or download the latest AppImage from [Releases](https://github.com/Tajwarbot/opencode/releases/latest).
-
 The installer downloads the AppImage to `~/.local/share/opencode-visuals`, adds `opencode-visuals` to `~/.local/bin`, and creates a desktop entry. The launcher uses XWayland when the session is Wayland and extracts the AppImage when FUSE is unavailable. It does not touch an existing OpenCode installation.
+
+Windows and macOS users download the installer from Releases. The build is unsigned, so macOS may require Open Anyway in System Settings.
 
 The build does not use the upstream update feed. Install a newer release to update it.
 
@@ -41,7 +47,7 @@ bun run --cwd packages/desktop build
 OPENCODE_CHANNEL=dev bun run --cwd packages/desktop pack
 ```
 
-`pack` writes the Linux AppImage, deb, and rpm to `dist/desktop`. The AppImage is the portable artifact used by the installer.
+`pack` writes the Linux AppImage, deb, and rpm to `dist/desktop`. Cross-platform builds are produced by `.github/workflows/visuals-release.yml`.
 
 ## Limits
 
@@ -49,7 +55,7 @@ OPENCODE_CHANNEL=dev bun run --cwd packages/desktop pack
 - The generated frame cannot start a follow-up turn, open files, or read the workspace. Those actions belong to the typed catalog and the host.
 - Localization is partial. Commands and menu items follow the locale; the workbench and frame copy are English-first.
 - The desktop build is unsigned. Linux may ask you to mark the AppImage executable the first time.
-- Only Linux x86_64 is packaged. macOS and Windows need a native build from source.
+- Windows and macOS builds are unsigned. Windows SmartScreen and macOS Gatekeeper will warn on first launch.
 
 ## Upstream README
 
