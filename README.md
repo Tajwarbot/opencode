@@ -20,7 +20,7 @@ Download the latest build from [Releases](https://github.com/Tajwarbot/opencode/
 
 | Platform | Asset |
 | --- | --- |
-| Linux x86_64 | AppImage, deb, rpm |
+| Linux x86_64 | AppImage, deb, rpm (package name `opencode-visuals`) |
 | Windows x64 | NSIS installer |
 | macOS arm64 and x64 | dmg |
 
