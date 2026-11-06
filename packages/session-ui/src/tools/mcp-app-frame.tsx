@@ -61,6 +61,8 @@ export function McpAppView(props: {
   const sendInput = () => {
     if (sentInput) return
 
+    if (props.status === "streaming") return
+
     sentInput = true
     post({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: toolInput(props.input) })
   }
