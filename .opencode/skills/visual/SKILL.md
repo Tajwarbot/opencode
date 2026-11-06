@@ -27,8 +27,8 @@ Before writing a technical answer, decide silently whether a visual would make t
 - `unit` names the units used by the numbers. `caption` is one sentence under the visual. `note` states assumptions or limits. `source` names the formula, standard, or reference.
 - Numbers carry units and a real basis. Every computed result must come from the supplied parameters. State the formula or assumption in `source` or `note`.
 - Keep specs under 256 kB. Keep series under eight, points under 4,000 per series, parts under forty, nodes under fourteen.
-- Use a typed kind when the question matches the table below. Use `html` only when no typed kind fits.
-- For every typed kind, do not add HTML, JavaScript, colors, or CSS. The renderer colors every mark from the app theme. For `html`, follow the sandbox rules below.
+- Use a typed kind when the question matches the table below. Use `a2ui` for a native page with text, controls, a table, or a custom scene. Use `html` only when the A2UI catalog cannot express the idea.
+- For every typed kind and for `a2ui`, do not add HTML, JavaScript, colors, or CSS. The app colors every mark from its theme. For `html`, follow the sandbox rules below.
 - Write the block after the prose that introduces it. Keep one claim per visual.
 
 ## Choosing a kind
@@ -46,11 +46,24 @@ Before writing a technical answer, decide silently whether a visual would make t
 | What is the agent doing? | `task` |
 | What is the structure or decision path? | `diagram` |
 | How do two quantities compare? | `plot` |
-| No typed kind fits, and an interactive explainer, comparison, calculator, timeline, or custom layout would help? | `html` |
+| Need a native page with text, a table, controls, or a custom drawing? | `a2ui` |
+| Need a custom interactive app the A2UI catalog cannot express? | `html` |
+
+## Native interfaces
+
+`a2ui` is the general native tier. Use it for topics outside the engineering catalog when the answer needs layout, text, a table, a control, or a custom drawing. The app renders native components, so the interface inherits the app theme and appears while the messages stream.
+
+- The outer visual is `kind: "a2ui"` with a `title` and optional `height`.
+- `data.messages` is an A2UI 1.0 stream: `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`. One component must have `id: "root"`.
+- Components are a flat list. Children reference IDs. Do not invent component names; use the catalog in `reference.md`.
+- Bind values with `{"@path": "/angle"}`. A slider that writes `/angle` updates every shape that reads it.
+- Use `Scene` for drawings: line, arrow, circle, rect, path, polygon, text, and group. Groups take `translate`, `rotate`, and `scale`; `animate` spins a group.
+- Stream in order: `createSurface` with the root and static parts, then `updateComponents` for controls and details, then `updateDataModel`. Keep each message small so the page builds progressively.
+- Use a typed renderer for engineering calculations. Use `a2ui` to explain, compare, lay out, or draw. Use `html` only when the catalog cannot express the interaction.
 
 ## General-purpose HTML visuals
 
-`html` is the second tier. Use it for topics outside the engineering catalog: an interactive explainer, a comparison with controls, a one-off calculator, a timeline, a layout study, or a diagram that needs behavior. Do not use it for a topic a typed kind already covers.
+`html` is the last tier. Use it only for a custom interactive app that the A2UI catalog cannot express: a bespoke editor, a chart with behavior the catalog lacks, or a page with an external library. Do not use it for a topic a typed kind or `a2ui` already covers.
 
 The document runs in an opaque iframe with scripts, no same-origin access, no network, no storage, and no bridge back to the app. Treat it as a sealed page.
 

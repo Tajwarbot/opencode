@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseVisual } from "./spec"
+import { parseVisual, parseVisualStream } from "./spec"
 
 const mechanism = JSON.stringify({
   v: 1,
@@ -138,5 +138,49 @@ describe("parseVisual html", () => {
 
     if (result.ok) return
     expect(result.error).toContain("data.css")
+  })
+
+  test("accepts an a2ui message stream", () => {
+    const result = parseVisual(
+      JSON.stringify({
+        v: 1,
+        kind: "a2ui",
+        title: "Translation and rotation",
+        data: {
+          messages: [
+            {
+              version: "1.0",
+              createSurface: {
+                surfaceId: "main",
+                components: [{ id: "root", component: "Text", text: "Rotate me" }],
+              },
+            },
+          ],
+        },
+      }),
+    )
+
+    expect(result.ok).toBe(true)
+
+    if (!result.ok) return
+    expect(result.spec.kind).toBe("a2ui")
+  })
+
+  test("rejects a2ui without messages", () => {
+    const result = parseVisual(JSON.stringify({ v: 1, kind: "a2ui", title: "Empty", data: {} }))
+    expect(result.ok).toBe(false)
+
+    if (result.ok) return
+    expect(result.error).toContain("data.messages")
+  })
+
+  test("lets an a2ui surface start before its messages are complete", () => {
+    const result = parseVisualStream('{"v":1,"kind":"a2ui","title":"Transform","data":{"messages":[')
+
+    expect(result.status).toBe("ready")
+
+    if (result.status !== "ready") return
+    expect(result.complete).toBe(false)
+    expect(result.spec.kind).toBe("a2ui")
   })
 })

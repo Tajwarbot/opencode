@@ -6,6 +6,11 @@ import { RENDERERS } from "./registry"
 /** Reparsing every chunk of a long spec costs more than the drawing it enables, so parse on a fixed length step. */
 const PARSE_STEP = 48
 
+/** Kinds that can draw from a prefix. The rest need their complete payload before they mount. */
+function partial(kind: string) {
+  return kind === "plot" || kind === "a2ui"
+}
+
 /**
  * Renders one visual from its fenced block. Inline blocks keep the code for a malformed spec, because returning
  * nothing is the CodeBlock contract for "declined"; the workbench shows the parse error instead. While a streamed block
@@ -38,7 +43,7 @@ export function VisualView(props: {
 
     if (result.status !== "ready") return undefined
 
-    if (!complete() && result.spec.kind !== "plot") return undefined
+    if (!complete() && !partial(result.spec.kind)) return undefined
 
     return result.spec
   }

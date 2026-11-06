@@ -1,0 +1,327 @@
+.vza-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 2px 0;
+  font-size: 12.5px;
+}
+
+.vza-column,
+.vza-row {
+  display: flex;
+  min-width: 0;
+}
+
+.vza-column {
+  flex-direction: column;
+}
+
+.vza-row {
+  flex-direction: row;
+}
+
+.vza-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--v-line);
+  border-radius: 8px;
+  background: var(--v-raised);
+}
+
+.vza-text {
+  margin: 0;
+  color: var(--v-fg-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.vza-text-h1,
+.vza-text-h2 {
+  color: var(--v-fg);
+  font-weight: 560;
+  line-height: 1.25;
+}
+
+.vza-text-h1 {
+  font-size: 18px;
+}
+
+.vza-text-h2 {
+  font-size: 15px;
+}
+
+.vza-text-caption {
+  color: var(--v-fg-3);
+  font-size: 11.5px;
+}
+
+.vza-text-code {
+  padding: 8px 10px;
+  border: 1px solid var(--v-line);
+  border-radius: 6px;
+  background: var(--v-bg);
+  color: var(--v-fg);
+  font-family: var(--v-mono);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+}
+
+.vza-divider {
+  width: 100%;
+  height: 1px;
+  flex: none;
+  background: var(--v-line);
+}
+
+.vza-control {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.vza-control-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--v-fg-2);
+  font-size: 11.5px;
+}
+
+.vza-control-head b {
+  color: var(--v-fg);
+  font-family: var(--v-mono);
+  font-weight: 500;
+}
+
+.vza-control input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--v-accent);
+}
+
+.vza-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--v-fg-2);
+  font-size: 12px;
+}
+
+.vza-check input {
+  margin: 0;
+  accent-color: var(--v-accent);
+}
+
+.vza-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--v-fg-2);
+  font-size: 11.5px;
+}
+
+.vza-field input,
+.vza-field select {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--v-line-2);
+  border-radius: 6px;
+  background: var(--v-bg);
+  color: var(--v-fg);
+  font: inherit;
+  font-size: 12px;
+}
+
+.vza-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.vza-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.vza-table th,
+.vza-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--v-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.vza-table th {
+  color: var(--v-fg-3);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vza-table td {
+  color: var(--v-fg-2);
+}
+
+.vza-metric {
+  display: grid;
+  gap: 1px;
+  padding: 2px 0;
+}
+
+.vza-metric-label,
+.vza-metric-caption {
+  color: var(--v-fg-3);
+  font-size: 11px;
+}
+
+.vza-metric-value {
+  color: var(--v-fg);
+  font-size: 22px;
+  font-weight: 560;
+  line-height: 1.15;
+}
+
+.vza-metric-value small {
+  margin-left: 5px;
+  color: var(--v-fg-2);
+  font-size: 11px;
+  font-weight: 450;
+}
+
+.vza-callout {
+  display: grid;
+  gap: 2px;
+  padding: 9px 11px;
+  border-left: 2px solid var(--v-line-2);
+  background: color-mix(in srgb, var(--v-fg) 3%, transparent);
+  color: var(--v-fg-2);
+  font-size: 12px;
+}
+
+.vza-callout strong {
+  color: var(--v-fg);
+  font-weight: 530;
+}
+
+.vza-callout-info {
+  border-color: var(--v-accent);
+}
+
+.vza-callout-warn {
+  border-color: #d18b2c;
+}
+
+.vza-callout-critical {
+  border-color: var(--v-critical);
+}
+
+.vza-callout-success {
+  border-color: var(--v-success);
+}
+
+.vza-steps {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vza-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--v-fg-2);
+  font-size: 12px;
+}
+
+.vza-steps i {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  margin-top: 5px;
+  border: 1px solid var(--v-line-2);
+  border-radius: 50%;
+}
+
+.vza-step-active i {
+  border-color: var(--v-accent);
+  background: var(--v-accent);
+}
+
+.vza-step-done i {
+  border-color: var(--v-success);
+  background: var(--v-success);
+}
+
+.vza-steps span {
+  display: grid;
+  gap: 1px;
+}
+
+.vza-steps b {
+  color: var(--v-fg);
+  font-weight: 500;
+}
+
+.vza-steps small {
+  color: var(--v-fg-3);
+  font-size: 11px;
+}
+
+.vza-scene {
+  width: 100%;
+  min-width: 0;
+}
+
+.vza-scene svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.vza-scene-grid line {
+  stroke: var(--v-grid);
+  stroke-width: 1;
+}
+
+.vza-unknown {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px dashed var(--v-line-2);
+  border-radius: 6px;
+  color: var(--v-fg-3);
+  font-family: var(--v-mono);
+  font-size: 11px;
+}
+
+.vza-waiting {
+  display: grid;
+  gap: 9px;
+  min-height: 120px;
+  padding: 12px 2px;
+}
+
+.vza-waiting span {
+  height: 9px;
+  border-radius: 4px;
+  background: var(--v-raised);
+  animation: vz-pulse 1.8s ease-in-out infinite;
+}
+
+.vza-waiting span:nth-child(1) {
+  width: 34%;
+}
+
+.vza-waiting span:nth-child(2) {
+  width: 62%;
+}
+
+.vza-waiting span:nth-child(3) {
+  width: 48%;
+}

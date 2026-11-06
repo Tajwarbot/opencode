@@ -32,6 +32,7 @@ export const VISUAL_KINDS = [
   "assembly",
   "task",
   "html",
+  "a2ui",
 ] as const
 
 export type VisualKind = (typeof VISUAL_KINDS)[number]
@@ -106,6 +107,11 @@ export function parseVisual(source: string): ParseResult {
 
     if (typeof js === "string" && htmlBytes(js) > HTML_LIMITS.js)
       return { ok: false, error: `The html script is larger than ${HTML_LIMITS.js / 1000} kB.` }
+  }
+
+  if (kind === "a2ui") {
+    if (!isObject(parsed.data) || !Array.isArray(parsed.data.messages) || parsed.data.messages.length === 0)
+      return { ok: false, error: "An a2ui visual needs data.messages with at least one A2UI message." }
   }
 
   return { ok: true, spec: specFrom(parsed, kind, title) }

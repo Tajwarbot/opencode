@@ -26,6 +26,8 @@ const AssemblyVisual = lazy(() => import("./renderers/assembly").then((module) =
 
 const HtmlVisual = lazy(() => import("./renderers/html").then((module) => ({ default: module.HtmlVisual })))
 
+const A2UIVisual = lazy(() => import("./a2ui/renderer").then((module) => ({ default: module.A2UIVisual })))
+
 export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec; streaming?: boolean }>> = {
   diagram: DiagramVisual,
   plot: PlotVisual,
@@ -39,4 +41,5 @@ export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec;
   assembly: AssemblyVisual,
   task: TaskVisual,
   html: HtmlVisual,
+  a2ui: A2UIVisual,
 }

@@ -12,6 +12,7 @@ import {
   type Plugin,
 } from "@opencode/plugin/gui"
 import type Visual from "./index"
+import a2uiCSS from "./core/a2ui/a2ui.css?inline"
 import visualCSS from "./core/visual.css?inline"
 import workbenchCSS from "./core/workbench.css?inline"
 import { KIND_LABEL } from "./core/frame"
@@ -180,6 +181,7 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
   }
 
   ctx.add(Style, visualCSS)
+  ctx.add(Style, a2uiCSS)
   ctx.add(Style, workbenchCSS)
 
   ctx.add(CodeBlock, {

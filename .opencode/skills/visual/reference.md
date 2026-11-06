@@ -240,9 +240,150 @@ Agent progress, not telemetry.
 - Use labels that state the quantity and unit. A chart with no unit is a sketch.
 - Declare `x.domain` and `y.domain` whenever you know the range. The plot draws while the fence streams, and a fixed domain keeps the axes still while points arrive; without one the scale reflows as each point lands.
 
+## a2ui
+
+Native interface composition. Use it for arbitrary topics that need layout, text, a table, controls, or a custom drawing. The app renders it with its own components and theme, so it appears while the messages stream and never needs HTML or browser testing.
+
+The outer visual:
+
+```json
+{
+  "v": 1,
+  "kind": "a2ui",
+  "title": "Translation and rotation",
+  "height": 520,
+  "data": {
+    "messages": [
+      { "version": "1.0", "createSurface": { "surfaceId": "main", "components": [], "dataModel": {} } }
+    ]
+  }
+}
+```
+
+- `data.messages` is an A2UI 1.0 stream. Messages apply in order: `createSurface`, `updateComponents`, `updateDataModel`, `deleteSurface`.
+- One component must have `id: "root"`. Components are a flat list; `children` and `child` reference IDs.
+- Bind any value with `{"@path": "/angle"}`. A slider that writes `/angle` updates every component and shape that reads it.
+- Keep each message small. `createSurface` carries the root and static parts; `updateComponents` adds controls and detail; `updateDataModel` fills values. The renderer merges by ID, so an unfinished message shows what it already has.
+- Do not add HTML, CSS, JavaScript, colors, or fonts. The catalog below owns the look.
+
+Catalog:
+
+| Component | Props |
+| --- | --- |
+| `Column` | `children`, `gap`, `align` (`start`, `center`, `end`, `stretch`), `justify` (`start`, `center`, `end`, `spaceBetween`, `spaceAround`) |
+| `Row` | same as `Column`, plus `wrap` |
+| `Card` | `child` or `children` |
+| `Text` | `text`, `variant` (`body`, `h1`, `h2`, `caption`, `code`), `align` (`start`, `center`, `end`) |
+| `Divider` | none |
+| `Slider` | `label`, `min`, `max`, `step`, `value` binding |
+| `CheckBox` | `label`, `value` binding |
+| `TextField` | `label`, `placeholder`, `value` binding |
+| `ChoicePicker` | `label`, `options` as `[{ "label", "value" }]`, `value` binding |
+| `Table` | `columns` as `[{ "label", "key" }]`, `rows` as objects |
+| `Metric` | `label`, `value`, `unit`, `caption` |
+| `Callout` | `tone` (`info`, `warn`, `critical`, `success`), `title`, `text` |
+| `Steps` | `items` as `[{ "label", "state", "detail" }]`, state `done`, `active`, `pending` |
+| `Scene` | `view` (`width`, `height`, `grid`), `label`, `shapes` |
+
+Scene shapes:
+
+- Common: `tone` (`accent`, `muted`, `fg`, `critical`, `success`, `line`), `fill` (`none`, `accent`, `accent-2`), `width`, `dash`, `opacity`, `translate` `[x, y]`, `rotate` degrees, `origin` `[x, y]`, `scale` number or `[x, y]`.
+- `line`, `arrow`: `from`, `to`; `arrow` adds `head`.
+- `circle`: `at`, `r`.
+- `rect`: `at` is the center, `size` `[w, h]`, `radius`.
+- `path`: `d`.
+- `polygon`: `points`.
+- `text`: `at`, `text`, `align`, `size`, `weight`.
+- `group`: `shapes`.
+- `animate`: `{ "from": 0, "to": 360, "duration": 8, "center": [x, y], "once": false }` rotates the shape or group continuously.
+
+Translation and rotation example:
+
+```json
+{
+  "v": 1,
+  "kind": "a2ui",
+  "title": "Translation and rotation",
+  "height": 520,
+  "unit": "grid units",
+  "data": {
+    "messages": [
+      {
+        "version": "1.0",
+        "createSurface": {
+          "surfaceId": "main",
+          "components": [
+            {
+              "id": "root",
+              "component": "Column",
+              "children": ["intro", "scene", "angle", "tx", "ty", "note"],
+              "gap": 10
+            },
+            {
+              "id": "intro",
+              "component": "Text",
+              "text": "Rotation turns the square about the origin. Translation moves the whole frame.",
+              "variant": "caption"
+            },
+            {
+              "id": "scene",
+              "component": "Scene",
+              "view": { "width": 520, "height": 300, "grid": 40 },
+              "label": "A square rotated about the origin and a translation vector",
+              "shapes": [
+                {
+                  "type": "group",
+                  "translate": [260, 150],
+                  "shapes": [
+                    {
+                      "type": "group",
+                      "rotate": { "@path": "/angle" },
+                      "shapes": [
+                        { "type": "rect", "at": [0, 0], "size": [96, 96], "fill": "accent-2", "tone": "accent" },
+                        { "type": "arrow", "from": [0, 0], "to": [130, 0], "tone": "accent" },
+                        { "type": "circle", "at": [0, 0], "r": 4, "fill": "accent", "tone": "accent" }
+                      ]
+                    },
+                    {
+                      "type": "arrow",
+                      "from": [0, 0],
+                      "to": [{ "@path": "/tx" }, { "@path": "/ty" }],
+                      "tone": "muted",
+                      "dash": true
+                    },
+                    {
+                      "type": "group",
+                      "translate": [{ "@path": "/tx" }, { "@path": "/ty" }],
+                      "shapes": [
+                        { "type": "circle", "at": [0, 0], "r": 5, "fill": "accent", "tone": "accent" },
+                        { "type": "text", "at": [0, -12], "text": "t", "tone": "fg" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            { "id": "angle", "component": "Slider", "label": "Rotation", "min": 0, "max": 360, "step": 1, "value": { "@path": "/angle" } },
+            { "id": "tx", "component": "Slider", "label": "Translation x", "min": -120, "max": 120, "step": 2, "value": { "@path": "/tx" } },
+            { "id": "ty", "component": "Slider", "label": "Translation y", "min": -100, "max": 100, "step": 2, "value": { "@path": "/ty" } },
+            {
+              "id": "note",
+              "component": "Text",
+              "text": "The matrix acts on the homogeneous column vector [x y 1]ᵀ.",
+              "variant": "caption"
+            }
+          ],
+          "dataModel": { "angle": 30, "tx": 60, "ty": -40 }
+        }
+      }
+    ]
+  }
+}
+```
+
 ## html
 
-General-purpose sandboxed UI. Use it only when no typed kind fits.
+General-purpose sandboxed UI. Use it only when no typed kind or `a2ui` fits.
 
 ```json
 {

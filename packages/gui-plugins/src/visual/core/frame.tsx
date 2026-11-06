@@ -15,6 +15,7 @@ export const KIND_LABEL: Record<VisualKind, string> = {
   assembly: "Assembly",
   task: "Task",
   html: "Generated UI",
+  a2ui: "Interface",
 }
 
 export function VisualFrame(props: {
