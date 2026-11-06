@@ -10,6 +10,7 @@ const DEFAULT_CSP = [
   "connect-src 'none'",
   "frame-src 'none'",
   "base-uri 'self'",
+  "form-action 'none'",
   "object-src 'none'",
 ].join("; ")
 
@@ -37,6 +38,7 @@ export function mcpAppCsp(csp: McpUiCsp | undefined) {
     sourceList("connect-src", origins(csp.connectDomains)),
     sourceList("frame-src", origins(csp.frameDomains)),
     sourceList("base-uri", ["'self'", ...origins(csp.baseUriDomains)]),
+    "form-action 'none'",
     "object-src 'none'",
   ]
 

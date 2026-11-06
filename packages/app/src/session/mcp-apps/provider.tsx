@@ -6,6 +6,7 @@ import { useData } from "@opencode/session-ui/context"
 import { McpAppsProvider, type McpAppHost } from "@opencode/session-ui/context/mcp-apps"
 import { useComposerState } from "@/composer/persistence"
 import { useServerSDK } from "@/runtime/server/client"
+import { usePlatform } from "@/runtime/platform/platform"
 
 /** Wires the MCP Apps bridge to the SDK, the composer, and the current theme. */
 export function McpAppHostProvider(props: ParentProps) {
@@ -13,6 +14,7 @@ export function McpAppHostProvider(props: ParentProps) {
   const sdk = useServerSDK()
   const prompt = useComposerState()
   const theme = useTheme()
+  const platform = usePlatform()
 
   const [catalog] = createResource(async () => {
     const result = await sdk.api.experimental.mcp.app.catalog({ location: { directory: data.directory } })
@@ -82,7 +84,7 @@ export function McpAppHostProvider(props: ParentProps) {
     openLink: (url) => {
       const target = safeURL(url)
 
-      if (target) window.open(target, "_blank", "noopener,noreferrer")
+      if (target) platform.openExternal(target)
     },
     theme: () => theme.mode(),
   }

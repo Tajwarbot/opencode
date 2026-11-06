@@ -39,6 +39,7 @@ describe("MCP App document", () => {
     expect(csp).toContain("connect-src 'none'")
     expect(csp).toContain("frame-src 'none'")
     expect(csp).toContain("object-src 'none'")
+    expect(csp).toContain("form-action 'none'")
   })
 
   test("opens only the directives a resource declares", () => {
@@ -52,6 +53,7 @@ describe("MCP App document", () => {
     expect(csp).toContain("script-src 'unsafe-inline' https://cdn.example.com")
     expect(csp).toContain("frame-src https://www.youtube.com")
     expect(csp).toContain("object-src 'none'")
+    expect(csp).toContain("form-action 'none'")
   })
 
   test("drops origins that are not http or websocket URLs", () => {
@@ -77,7 +79,7 @@ describe("MCP App document", () => {
     const document = buildMcpAppDocument({ html: "<p>hello</p>", theme: "dark" })
 
     expect(document).toBe(
-      '<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src \'self\' data:; media-src \'self\' data:; font-src \'self\' data:; connect-src \'none\'; frame-src \'none\'; base-uri \'self\'; object-src \'none\'"><meta name="color-scheme" content="dark"></head><body><p>hello</p></body></html>',
+      '<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src \'self\' data:; media-src \'self\' data:; font-src \'self\' data:; connect-src \'none\'; frame-src \'none\'; base-uri \'self\'; form-action \'none\'; object-src \'none\'"><meta name="color-scheme" content="dark"></head><body><p>hello</p></body></html>',
     )
   })
 
