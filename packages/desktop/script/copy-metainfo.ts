@@ -6,9 +6,17 @@ const channel = arg === "dev" || arg === "beta" || arg === "prod" ? arg : resolv
 
 const appId = channel === "prod" ? "ai.opencode.desktop" : `ai.opencode.desktop.${channel}`
 
-const productName = channel === "prod" ? "OpenCode" : channel === "dev" ? "OpenCode Visuals" : "OpenCode Beta"
+const productName = productNameFor(channel)
 
 const summary = channel === "dev" ? "OpenCode with generative engineering and general-purpose visuals" : `Open source AI coding agent${channel !== "prod" ? ` (${channel})` : ""}`
+
+function productNameFor(channel: string) {
+  if (channel === "prod") return "OpenCode"
+
+  if (channel === "dev") return "OpenCode Visuals"
+
+  return "OpenCode Beta"
+}
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">

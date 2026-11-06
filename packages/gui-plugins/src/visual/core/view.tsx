@@ -1,47 +1,72 @@
 import { createMemo, ErrorBoundary, Show, Suspense } from "solid-js"
 import { VisualError } from "./frame"
-import { parseVisual, type VisualSpec } from "./spec"
+import { parseVisualStream, type StreamParse } from "./spec"
 import { RENDERERS } from "./registry"
+
+/** Reparsing every chunk of a long spec costs more than the drawing it enables, so parse on a fixed length step. */
+const PARSE_STEP = 192
 
 /**
  * Renders one visual from its fenced block. Inline blocks keep the code for a malformed spec, because returning
- * nothing is the CodeBlock contract for "declined"; the workbench shows the parse error instead.
+ * nothing is the CodeBlock contract for "declined"; the workbench shows the parse error instead. While a streamed block
+ * is incomplete, only kinds that can draw their prefix render; the rest keep a skeleton until the closing fence.
  */
-export function VisualView(props: { code: string; context?: "inline" | "workbench"; onError?: (message: string) => void }) {
-  const parsed = createMemo(() => parseVisual(props.code))
+export function VisualView(props: {
+  code: string
+  complete?: boolean
+  context?: "inline" | "workbench"
+  onError?: (message: string) => void
+}) {
+  let last: { bucket: number; complete: boolean; code: string; result: StreamParse } | undefined
+  const complete = () => props.complete !== false
 
-  const spec = (): VisualSpec | undefined => {
+  const parsed = createMemo(() => {
+    const code = props.code
+    const ready = complete()
+    const bucket = ready ? code.length : Math.floor(code.length / PARSE_STEP)
+
+    if (last && last.bucket === bucket && last.complete === ready && last.code === code) return last.result
+
+    const result = parseVisualStream(code)
+    last = { bucket, complete: ready, code, result }
+
+    return result
+  })
+
+  const spec = () => {
     const result = parsed()
 
-    return result.ok ? result.spec : undefined
+    if (result.status !== "ready") return undefined
+
+    if (!complete() && result.spec.kind !== "plot") return undefined
+
+    return result.spec
   }
 
-  const failure = (): string => {
+  const failure = () => {
     const result = parsed()
 
-    return result.ok ? "" : result.error
+    return result.status === "error" ? result.error : ""
   }
 
   return (
     <Show
-      when={spec()}
+      when={spec()?.kind}
       keyed
       fallback={
-        <Show when={props.context === "workbench"}>
+        <Show when={props.context === "workbench" && failure()} fallback={<Skeleton />}>
           <VisualError message={failure()} />
         </Show>
       }
     >
-      {(value) => {
-        const content = () => {
-          const Component = RENDERERS[value.kind]
+      {(kind) => {
+        const Component = RENDERERS[kind]
 
-          return (
-            <Suspense fallback={<div class="vz vz-loading">Loading visual</div>}>
-              <Component spec={value} />
-            </Suspense>
-          )
-        }
+        const content = () => (
+          <Suspense fallback={<div class="vz vz-loading" />}>
+            <Show when={spec()}>{(value) => <Component spec={value()} streaming={!complete()} />}</Show>
+          </Suspense>
+        )
 
         if (props.context !== "workbench") return content()
 
@@ -58,6 +83,17 @@ export function VisualView(props: { code: string; context?: "inline" | "workbenc
         )
       }}
     </Show>
+  )
+}
+
+function Skeleton() {
+  return (
+    <div class="vz vz-skeleton" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
   )
 }
 

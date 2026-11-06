@@ -26,7 +26,7 @@ const AssemblyVisual = lazy(() => import("./renderers/assembly").then((module) =
 
 const HtmlVisual = lazy(() => import("./renderers/html").then((module) => ({ default: module.HtmlVisual })))
 
-export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec }>> = {
+export const RENDERERS: Record<VisualSpec["kind"], Component<{ spec: VisualSpec; streaming?: boolean }>> = {
   diagram: DiagramVisual,
   plot: PlotVisual,
   mechanism: MechanismVisual,

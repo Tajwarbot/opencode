@@ -2188,6 +2188,54 @@ story("code block content replaces complete blocks of its languages, and actions
   ).toHaveCount(0)
 })
 
+story("streaming code block content mounts before the closing fence and updates in place", async ({ page }) => {
+  const host = await page.evaluateHandle(async (fixture) => {
+    const { mountCodeBlocks, until, CodeBlock, createEffect } = await import(fixture)
+
+    const host: CodeBlocksHost = mountCodeBlocks({
+      definitions: [
+        {
+          id: "acme",
+          windowEntry: async () => ({
+            default: (ctx: Context) => {
+              ctx.add(CodeBlock, {
+                languages: ["chart"],
+                stream: true,
+                render: (props: CodeBlockProps) => {
+                  const chart = document.createElement("div")
+                  chart.dataset.testid = "stream-chart"
+
+                  createEffect(() => {
+                    chart.textContent = `${props.code}|${props.complete}`
+                  })
+
+                  return chart
+                },
+              })
+            },
+          }),
+        },
+      ],
+    })
+
+    await until(() => host.status("acme") === "active")
+    host.show("```chart\nA,B", true)
+
+    return host
+  }, fixture)
+
+  const root = page.getByTestId("code-blocks")
+
+  await expect(root.getByTestId("stream-chart")).toHaveText("A,B|false")
+  await expect(root.locator('[data-component="markdown-code"] pre')).toBeHidden()
+
+  await host.evaluate((host) => host.show("```chart\nA,B\nC,D", true))
+  await expect(root.getByTestId("stream-chart")).toHaveText("A,B\nC,D|false")
+
+  await host.evaluate((host) => host.show("```chart\nA,B\nC,D\n```\n"))
+  await expect(root.getByTestId("stream-chart")).toHaveText("A,B\nC,D|true")
+})
+
 story("code block content follows plugins that join and leave after the message rendered", async ({ page }) => {
   const host = await page.evaluateHandle(async (fixture) => {
     const { mountCodeBlocks, until } = await import(fixture)

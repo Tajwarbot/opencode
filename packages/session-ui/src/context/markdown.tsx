@@ -12,12 +12,14 @@ export type OpenMarkdownLocalFile = (path: string) => void
  */
 export type MarkdownLocalFileExists = (path: string) => boolean | Promise<boolean>
 
-/** A complete fenced code block, as `MarkdownCodeBlocks` receives it. */
+/** One fenced code block, as `MarkdownCodeBlocks` receives it. */
 export type MarkdownCodeBlock = {
   /** The source between the fences, without the final line break. */
   readonly code: string
   /** The first word of the fence's info string, lowercased, e.g. `mermaid`. Empty without one. */
   readonly language: string
+  /** False while a streamed block is still arriving; true once the closing fence is part of the source. */
+  readonly complete: boolean
 }
 
 /** The languages that have content of their own; a new object whenever a block's content may change. */
@@ -26,6 +28,16 @@ export type MarkdownCodeBlockMatch = {
   readonly render: ReadonlySet<string>
   /** Languages whose blocks get `actions` beside Copy once complete. */
   readonly actions: ReadonlySet<string>
+  /** Languages whose blocks `render` mounts before the closing fence arrives, so they can draw progressively. */
+  readonly stream: ReadonlySet<string>
+}
+
+/** Mounted content for one code block, and the update a streaming block delivers on every source change. */
+export type MarkdownCodeContent = {
+  /** Removes the content. */
+  dispose(): void
+  /** Replaces the source of a streaming block without remounting its content. */
+  update?(block: MarkdownCodeBlock): void
 }
 
 /** A button beside a code block's Copy button. */
@@ -40,16 +52,22 @@ export type MarkdownCodeAction = {
 
 /**
  * Content for fenced code blocks in place of the highlighted code, and buttons beside Copy. Markdown asks only for blocks
- * whose language `current` lists, and only once the closing fence arrived; every other block costs a set lookup.
+ * whose language `current` lists; a language in `stream` is asked before the closing fence arrives, every other block
+ * only once it is complete. Every other language costs a set lookup.
  */
 export type MarkdownCodeBlocks = {
   /** The languages with content. Reactive: markdown decorates its blocks again when it returns a new object. */
   readonly current: () => MarkdownCodeBlockMatch
   /**
    * Mounts content for a block into `target`. Returns the content's dispose, or undefined to keep the code. Calls
-   * `fallback` when the content fails later; markdown then shows the code again.
+   * `fallback` when the content fails later; markdown then shows the code again. A streamed block calls `update` with
+   * every new source instead of remounting.
    */
-  readonly render: (target: HTMLElement, block: MarkdownCodeBlock, fallback: () => void) => (() => void) | undefined
+  readonly render: (
+    target: HTMLElement,
+    block: MarkdownCodeBlock,
+    fallback: () => void,
+  ) => MarkdownCodeContent | undefined
   /** The buttons for a language, in order. Reactive. */
   readonly actions: (language: string) => readonly MarkdownCodeAction[]
 }

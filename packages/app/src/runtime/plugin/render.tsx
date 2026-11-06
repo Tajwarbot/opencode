@@ -1,6 +1,7 @@
 import {
   createEffect,
   createMemo,
+  createSignal,
   ErrorBoundary,
   For,
   getOwner,
@@ -9,6 +10,7 @@ import {
   runWithOwner,
   Show,
   untrack,
+  type Accessor,
   type Component,
   type JSX,
   type ParentProps,
@@ -205,20 +207,26 @@ function createCodeBlocks(
   const current = createMemo(
     () => {
       const renderers = new Map<string, Item<CodeBlock>>()
-      host.items(CodeBlock).forEach((item) =>
+      const streaming = new Map<string, Item<CodeBlock>>()
+
+      host.items(CodeBlock).forEach((item) => {
         item.value.languages.forEach((language) => {
           const key = language.toLowerCase()
 
           if (!renderers.has(key)) renderers.set(key, item)
-        }),
-      )
+
+          if (item.value.stream && !streaming.has(key)) streaming.set(key, item)
+        })
+      })
       const actions = host.items(CodeBlockAction).toSorted((a, b) => (a.value.order ?? 0) - (b.value.order ?? 0))
 
       return {
         renderers,
+        streaming,
         items: actions,
         render: new Set(renderers.keys()),
         actions: new Set(actions.flatMap((item) => item.value.languages.map((language) => language.toLowerCase()))),
+        stream: new Set(streaming.keys()),
       }
     },
     undefined,
@@ -227,13 +235,32 @@ function createCodeBlocks(
         a.items.length === b.items.length &&
         a.items.every((item, index) => item === b.items[index]) &&
         a.renderers.size === b.renderers.size &&
-        [...a.renderers].every(([language, item]) => b.renderers.get(language) === item),
+        [...a.renderers].every(([language, item]) => b.renderers.get(language) === item) &&
+        a.streaming.size === b.streaming.size &&
+        [...a.streaming].every(([language, item]) => b.streaming.get(language) === item),
     },
   )
 
   const input = (block: MarkdownCodeBlock): CodeBlockProps => ({
     code: block.code,
     language: block.language,
+    complete: block.complete,
+    get session() {
+      return session()
+    },
+  })
+
+  const live = (block: Accessor<MarkdownCodeBlock>, decline: () => void): CodeBlockProps => ({
+    get code() {
+      return block().code
+    },
+    get language() {
+      return block().language
+    },
+    get complete() {
+      return block().complete
+    },
+    decline,
     get session() {
       return session()
     },
@@ -270,13 +297,15 @@ function createCodeBlocks(
 
       if (!item) return
 
-      return runWithOwner(owner, () =>
+      const [source, setSource] = createSignal(block)
+
+      const dispose = runWithOwner(owner, () =>
         render(
           () => (
             <Provider codeBlocks={false}>
               <Contribution plugin={item.plugin} failed={fallback}>
                 {() => {
-                  const view = item.value.render(input(block))
+                  const view = item.value.render(live(source, fallback))
 
                   // Declined: markdown shows the code again once this render returns.
                   if (view === undefined || view === null) queueMicrotask(fallback)
@@ -289,6 +318,13 @@ function createCodeBlocks(
           target,
         ),
       )
+
+      return {
+        dispose: dispose ?? (() => undefined),
+        update(next) {
+          setSource(next)
+        },
+      }
     },
     actions: (language) =>
       current()

@@ -19,7 +19,7 @@ interface Series {
   tone: "accent" | "muted"
 }
 
-export function PlotVisual(props: { spec: VisualSpec }) {
+export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
   const data = () => object(props.spec.data) ?? {}
 
   const series = createMemo<Series[]>(() => {
@@ -45,29 +45,59 @@ export function PlotVisual(props: { spec: VisualSpec }) {
   const xLog = () => str(xMeta().scale, "linear") === "log"
   const yLog = () => str(yMeta().scale, "linear") === "log"
 
-  const xDomain = () => {
+  const rawXDomain = (): [number, number] | undefined => {
     const declared = pairs(xMeta().domain)[0]
 
     if (declared) return declared
     const values = all().map((point) => point[0])
+
+    if (values.length === 0) return undefined
+
     const positive = values.filter((value) => value > 0)
 
-    if (xLog()) return [Math.min(...positive) / 1.15, Math.max(...positive) * 1.15] as [number, number]
+    if (xLog()) return positive.length === 0 ? [1, 10] : [Math.min(...positive) / 1.15, Math.max(...positive) * 1.15]
 
-    return [Math.min(...values, 0), Math.max(...values, 1)] as [number, number]
+    return [Math.min(...values, 0), Math.max(...values, 1)]
   }
 
-  const yDomain = () => {
+  const rawYDomain = (): [number, number] | undefined => {
     const declared = pairs(yMeta().domain)[0]
 
     if (declared) return declared
     const values = all().map((point) => point[1])
+
+    if (values.length === 0) return undefined
+
     const positive = values.filter((value) => value > 0)
 
-    if (yLog()) return [Math.min(...positive) / 1.15, Math.max(...positive) * 1.15] as [number, number]
+    if (yLog()) return positive.length === 0 ? [1, 10] : [Math.min(...positive) / 1.15, Math.max(...positive) * 1.15]
 
-    return includeZero([Math.min(...values, 0), Math.max(...values, 1)] as [number, number])
+    return includeZero([Math.min(...values, 0), Math.max(...values, 1)])
   }
+
+  // A growing domain never shrinks while points arrive, so the chart does not flicker between two scales.
+  let xSeen: [number, number] | undefined
+  let ySeen: [number, number] | undefined
+
+  const xDomain = createMemo<[number, number]>(() => {
+    const next = rawXDomain()
+
+    if (!next) return xSeen ?? [0, 1]
+
+    xSeen = xSeen ? [Math.min(xSeen[0], next[0]), Math.max(xSeen[1], next[1])] : next
+
+    return xSeen
+  })
+
+  const yDomain = createMemo<[number, number]>(() => {
+    const next = rawYDomain()
+
+    if (!next) return ySeen ?? [0, 1]
+
+    ySeen = ySeen ? [Math.min(ySeen[0], next[0]), Math.max(ySeen[1], next[1])] : next
+
+    return ySeen
+  })
 
   const xScale = () => {
     const domain = xDomain()
@@ -85,7 +115,10 @@ export function PlotVisual(props: { spec: VisualSpec }) {
 
   const xTicks = () => {
     const base = xLog() ? logTicks(xDomain()) : ticks(xDomain(), 6)
-    const max = Math.max(...all().map((point) => point[0]))
+    const values = all()
+
+    if (values.length === 0) return base
+    const max = Math.max(...values.map((point) => point[0]))
     const last = base[base.length - 1]
 
     return last !== undefined && max > last * 1.02 ? [...base, max] : base
@@ -93,7 +126,10 @@ export function PlotVisual(props: { spec: VisualSpec }) {
 
   const yTicks = () => {
     const base = yLog() ? logTicks(yDomain()) : ticks(yDomain(), 5)
-    const max = Math.max(...all().map((point) => point[1]))
+    const values = all()
+
+    if (values.length === 0) return base
+    const max = Math.max(...values.map((point) => point[1]))
     const last = base[base.length - 1]
 
     return last !== undefined && max > last * 1.02 ? [...base, max] : base
@@ -119,7 +155,12 @@ export function PlotVisual(props: { spec: VisualSpec }) {
     <VisualFrame
       spec={props.spec}
       stage={
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={props.spec.title}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          classList={{ "vz-streaming": props.streaming }}
+          role="img"
+          aria-label={props.spec.title}
+        >
           <For each={yTicks()}>
             {(tick) => (
               <>

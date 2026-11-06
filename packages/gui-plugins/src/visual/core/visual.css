@@ -438,6 +438,45 @@
   font-size: 11px;
 }
 
+.vz-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 220px;
+  padding: 18px 16px;
+}
+
+.vz-skeleton span {
+  height: 10px;
+  border-radius: 4px;
+  background: var(--v-raised);
+  animation: vz-pulse 1.8s ease-in-out infinite;
+}
+
+.vz-skeleton span:nth-child(1) {
+  width: 38%;
+}
+
+.vz-skeleton span:nth-child(2) {
+  width: 72%;
+}
+
+.vz-skeleton span:nth-child(3) {
+  width: 54%;
+}
+
+.vz-skeleton span:nth-child(4) {
+  width: 86%;
+}
+
+.vz-stage svg text {
+  transition: opacity 180ms ease;
+}
+
+.vz-stage svg.vz-streaming text {
+  opacity: 0;
+}
+
 .vz-fallback {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

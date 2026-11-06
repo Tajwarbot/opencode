@@ -685,8 +685,8 @@ export interface ComposerPill {
 }
 
 /**
- * One complete fenced code block, as a `CodeBlock` render and a `CodeBlockAction` receive it. Do not destructure:
- * `session` is a getter.
+ * One fenced code block, as a `CodeBlock` render and a `CodeBlockAction` receive it. Do not destructure: `session` is a
+ * getter.
  */
 export interface CodeBlockProps {
   /** The source between the fences, without the final line break. */
@@ -696,6 +696,16 @@ export interface CodeBlockProps {
    * and `_ # + . -`. For ```` ```Mermaid title="Flow" ```` it is `mermaid`; empty for a fence without one.
    */
   readonly language: string
+  /**
+   * False while the block is still streaming and the contribution opted into `CodeBlock.stream`; true once the closing
+   * fence arrived. Contributions without `stream` only receive complete blocks.
+   */
+  readonly complete: boolean
+  /**
+   * Asks the host to show the highlighted code again, for a streamed block that turned out to be unrenderable once it
+   * completed. The host keeps the code for that block until its source changes. Ignore it outside `stream`.
+   */
+  readonly decline?: () => void
   /**
    * The routed session of the screen that shows the block; a new object when another session is routed. Undefined for
    * Markdown outside a session screen, where the host does not offer code block content today.
@@ -724,10 +734,16 @@ export interface CodeBlock {
    */
   readonly languages: readonly string[]
   /**
-   * Renders one block once, under your plugin's context; its own reactivity updates it, also when another session is
-   * routed. Return `undefined` or `null` to keep the highlighted code, e.g. for a source you cannot parse. A render that
-   * throws records the error under your plugin and the block shows its code; the plugin keeps running. The host
-   * renders it again only when the block or the set of contributions changes.
+   * Mount this contribution before the closing fence arrives, so it can draw the block progressively. Defaults to false.
+   * When true, `render` runs once at the first characters and `CodeBlockProps.code` updates in place on every change;
+   * `CodeBlockProps.complete` tells it when the fence closed. A render that throws or declines falls back to code.
+   */
+  readonly stream?: boolean
+  /**
+   * Renders one block under your plugin's context; its own reactivity updates it, also when another session is routed.
+   * Return `undefined` or `null` to keep the highlighted code, e.g. for a source you cannot parse. A render that throws
+   * records the error under your plugin and the block shows its code; the plugin keeps running. The host renders it
+   * again only when the block or the set of contributions changes, and updates `code` in place when `stream` is set.
    *
    * @param props - The block and its session. Do not destructure.
    * @returns Your UI for the block, or `undefined` or `null` to keep the code.

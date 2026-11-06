@@ -1,7 +1,8 @@
-import { createSignal, onMount, Show } from "solid-js"
+import { createSignal, Show } from "solid-js"
 import {
   CodeBlock,
   Command,
+  createKeyed,
   ComposerPill,
   MenuItem,
   Panel,
@@ -13,6 +14,7 @@ import {
 import type Visual from "./index"
 import visualCSS from "./core/visual.css?inline"
 import workbenchCSS from "./core/workbench.css?inline"
+import { KIND_LABEL } from "./core/frame"
 import { parseVisual } from "./core/spec"
 import { VisualView, visualID } from "./core/view"
 import { Workbench, type VisualEntry } from "./core/workbench"
@@ -100,11 +102,35 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
 
   const VisualBlock = (props: {
     code: string
-    title: string
-    kind: string
+    complete: boolean
+    decline?: () => void
     session?: MountedSession
   }) => {
-    onMount(() => {
+    const completeSpec = () => {
+      if (!props.complete) return undefined
+
+      const parsed = parseVisual(props.code)
+
+      return parsed.ok ? parsed.spec : undefined
+    }
+
+    const kindLabel = () => {
+      const spec = completeSpec()
+
+      return spec ? KIND_LABEL[spec.kind] : ctx.t("title")
+    }
+
+    createKeyed(() => props.complete, (complete) => {
+      if (!complete) return
+
+      const parsed = parseVisual(props.code)
+
+      if (!parsed.ok) {
+        props.decline?.()
+
+        return
+      }
+
       if (!props.session) return
 
       remember(props.session.key, props.code)
@@ -114,17 +140,17 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
 
     return (
       <Show
-        when={ctx.appearance.visualDisplay() === "inline"}
+        when={ctx.appearance.visualDisplay() === "inline" || !props.complete}
         fallback={
           <button type="button" class="vz-open" onClick={() => open(props.session)}>
-            <span class="vz-open-kind">{props.kind}</span>
-            <span class="vz-open-title">{props.title}</span>
+            <span class="vz-open-kind">{kindLabel()}</span>
+            <span class="vz-open-title">{completeSpec()?.title ?? ""}</span>
             <span class="vz-open-action">Open in panel</span>
           </button>
         }
       >
         <div class="vz-inline">
-          <VisualView code={props.code} context="inline" />
+          <VisualView code={props.code} complete={props.complete} context="inline" />
         </div>
       </Show>
     )
@@ -158,16 +184,15 @@ const setup: Plugin.Setup<typeof Visual> = (ctx) => {
 
   ctx.add(CodeBlock, {
     languages: ["visual", "genui"],
+    stream: true,
     render: (props) => {
-      const parsed = parseVisual(props.code)
-
-      if (!parsed.ok) return undefined
+      if (props.complete && !parseVisual(props.code).ok) return undefined
 
       return (
         <VisualBlock
           code={props.code}
-          title={parsed.spec.title}
-          kind={parsed.spec.kind}
+          complete={props.complete}
+          decline={props.decline}
           session={props.session}
         />
       )

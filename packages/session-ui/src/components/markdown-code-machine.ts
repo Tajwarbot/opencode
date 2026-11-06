@@ -1,10 +1,11 @@
 import type { MarkdownCodeBlock, MarkdownCodeBlockMatch } from "../context/markdown"
 
-/** A complete block as plugin content or actions received it; another key means the content must mount again. */
+/** A block as plugin content or actions received it; another key means the content must mount again. */
 export type CodeBlockKey = {
   readonly match: MarkdownCodeBlockMatch
   readonly language: string
   readonly source: string
+  readonly complete: boolean
 }
 
 /** What a Mermaid render draws: whole lines while the block streams, the full source once it is complete. */
@@ -55,6 +56,7 @@ export type CodeDecorationEffect =
   | { readonly type: "clear-plugin" }
   | { readonly type: "mount-actions"; readonly block: MarkdownCodeBlock }
   | { readonly type: "mount-plugin"; readonly attempt: number; readonly block: MarkdownCodeBlock }
+  | { readonly type: "update-plugin"; readonly attempt: number; readonly block: MarkdownCodeBlock }
   | { readonly type: "render-mermaid"; readonly attempt: number; readonly input: string }
 
 export type CodeDecorationTransition = {
@@ -78,7 +80,7 @@ export function transitionCodeDecoration(
     if (state.status !== "plugin" || event.attempt !== state.attempts) return { state, effects: EMPTY_CODE_EFFECTS }
     const plugin = state.plugin
 
-    return settle(state, sync(state, { type: "sync", ...plugin, complete: true }, plugin))
+    return settle(state, sync(state, { type: "sync", ...plugin }, plugin))
   }
 
   if (event.type === "disposed") return settle(state, { status: "code", attempts: state.attempts })
@@ -110,6 +112,7 @@ export function viewCodeDecoration(state: CodeDecorationState) {
 function sync(state: CodeDecorationState, event: Sync, declined: CodeBlockKey | undefined): CodeDecorationState {
   const match = event.match
   const claimed = !!match?.render.has(event.language)
+  const streaming = !!match?.stream.has(event.language)
   const failed = declined && sameBlock(declined, event) ? declined : undefined
 
   const actions =
@@ -117,20 +120,30 @@ function sync(state: CodeDecorationState, event: Sync, declined: CodeBlockKey | 
       ? undefined
       : state.actions && sameBlock(state.actions, event)
         ? state.actions
-        : { match, language: event.language, source: event.source }
+        : { match, language: event.language, source: event.source, complete: event.complete }
 
-  if (match && claimed && event.complete && !failed) {
-    if (state.status === "plugin" && sameBlock(state.plugin, event)) return keep(state, actions, failed)
+  if (match && claimed && !failed && (event.complete || (streaming && !!event.source))) {
+    if (state.status === "plugin" && state.plugin.match === match && state.plugin.language === event.language) {
+      if (sameContent(state.plugin, event)) return keep(state, actions, failed)
+
+      return {
+        ...state,
+        plugin: { ...state.plugin, source: event.source, complete: event.complete },
+        actions,
+        declined: failed,
+      }
+    }
 
     return {
       status: "plugin",
       attempts: state.attempts + 1,
-      plugin: { match, language: event.language, source: event.source },
+      plugin: { match, language: event.language, source: event.source, complete: event.complete },
       actions,
+      declined: failed,
     }
   }
 
-  // Claimed content waits for the closing fence and gets the code until then, not the built-in diagram.
+  // Content that did not opt into streaming waits for the closing fence and gets the code until then, not the diagram.
   if (event.language !== "mermaid" || !event.source || (claimed && !failed)) {
     if (state.status === "code" && !state.render && !state.tried) return keep(state, actions, failed)
 
@@ -174,6 +187,9 @@ function settle(state: CodeDecorationState, next: CodeDecorationState): CodeDeco
   const render = state.status === "plugin" ? undefined : state.render
   const nextRender = next.status === "plugin" ? undefined : next.render
 
+  const updated =
+    state.status === "plugin" && nextPlugin && nextPlugin.attempts === state.attempts && nextPlugin.plugin !== state.plugin
+
   const effects: CodeDecorationEffect[] = [
     ...(state.actions && state.actions !== next.actions ? [{ type: "clear-actions" as const }] : []),
     ...(plugin !== undefined && plugin !== nextPlugin?.attempts ? [{ type: "clear-plugin" as const }] : []),
@@ -183,6 +199,7 @@ function settle(state: CodeDecorationState, next: CodeDecorationState): CodeDeco
     ...(nextPlugin && nextPlugin.attempts !== plugin
       ? [{ type: "mount-plugin" as const, attempt: nextPlugin.attempts, block: block(nextPlugin.plugin) }]
       : []),
+    ...(updated ? [{ type: "update-plugin" as const, attempt: nextPlugin.attempts, block: block(nextPlugin.plugin) }] : []),
     ...(nextRender && nextRender !== render
       ? [{ type: "render-mermaid" as const, attempt: nextRender.attempt, input: nextRender.input }]
       : []),
@@ -192,9 +209,18 @@ function settle(state: CodeDecorationState, next: CodeDecorationState): CodeDeco
 }
 
 function block(key: CodeBlockKey): MarkdownCodeBlock {
-  return { code: key.source.replace(/\n$/, ""), language: key.language }
+  return { code: key.source.replace(/\n$/, ""), language: key.language, complete: key.complete }
 }
 
-function sameBlock(key: CodeBlockKey, event: Pick<Sync, "match" | "language" | "source">) {
-  return key.match === event.match && key.language === event.language && key.source === event.source
+function sameBlock(key: CodeBlockKey, event: Pick<Sync, "match" | "language" | "source" | "complete">) {
+  return (
+    key.match === event.match &&
+    key.language === event.language &&
+    key.source === event.source &&
+    key.complete === event.complete
+  )
+}
+
+function sameContent(key: CodeBlockKey, event: Pick<Sync, "source" | "complete">) {
+  return key.source === event.source && key.complete === event.complete
 }

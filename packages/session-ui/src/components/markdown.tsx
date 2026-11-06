@@ -277,7 +277,11 @@ type CodeDriver = { plugins: CodePlugins | undefined; dispatch: (event: CodeDeco
 const codeDrivers = new WeakMap<HTMLElement, CodeDriver>()
 
 // Plugin content mounted into a block; `dispose` arrives once the plugin's render returns.
-type CodeContent = { host: HTMLElement; dispose?: () => void }
+type CodeContent = {
+  host: HTMLElement
+  dispose?: () => void
+  update?: (block: MarkdownCodeBlock) => void
+}
 
 // Content for a block's language replaces its code only once the closing fence arrived, so it never receives half a
 // block; until then, and when the content declines or fails, the block shows its code (or the built-in diagram).
@@ -350,19 +354,26 @@ function createCodeDriver(wrapper: HTMLElement): CodeDriver {
       return
     }
 
+    if (effect.type === "update-plugin") {
+      content?.update?.(effect.block)
+
+      return
+    }
+
     const host = document.createElement("div")
     host.dataset.slot = "markdown-code-content"
     wrapper.appendChild(host)
     const mounted: CodeContent = { host }
     content = mounted
     const fallback = () => dispatch({ type: "plugin.failed", attempt: effect.attempt })
-    const dispose = blocks?.render(host, effect.block, fallback)
+    const handle = blocks?.render(host, effect.block, fallback)
 
     // The content already failed while it rendered.
-    if (content !== mounted) return dispose?.()
+    if (content !== mounted) return handle?.dispose()
 
-    if (!dispose) return fallback()
-    mounted.dispose = dispose
+    if (!handle) return fallback()
+    mounted.dispose = handle.dispose
+    mounted.update = handle.update
   }
 
   const driver: CodeDriver = { plugins: undefined, dispatch }

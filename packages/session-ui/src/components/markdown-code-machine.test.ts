@@ -26,7 +26,11 @@ function svg(state: CodeDecorationState) {
   return viewCodeDecoration(state).svg
 }
 
-const claim = (language: string) => ({ render: new Set([language]), actions: new Set<string>() })
+const claim = (language: string, stream = false) => ({
+  render: new Set([language]),
+  actions: new Set<string>(),
+  stream: stream ? new Set([language]) : new Set<string>(),
+})
 
 describe("markdown code decoration", () => {
   test("keeps plain code on the same state with no effects", () => {
@@ -138,7 +142,7 @@ describe("markdown code decoration", () => {
     })
 
     expect(plugin.effects).toEqual([
-      { type: "mount-plugin", attempt: 2, block: { code: "flowchart LR\nA --> B", language: "mermaid" } },
+      { type: "mount-plugin", attempt: 2, block: { code: "flowchart LR\nA --> B", language: "mermaid", complete: true } },
     ])
     const late = transitionCodeDecoration(plugin.state, { type: "mermaid.resolved", attempt: 1, svg: "<svg />" })
 
@@ -164,7 +168,7 @@ describe("markdown code decoration", () => {
     expect(stale.state).toBe(failed.state)
     expect(transitionCodeDecoration(failed.state, event).state).toBe(failed.state)
     expect(transitionCodeDecoration(failed.state, { ...event, source: "y" }).effects).toEqual([
-      { type: "mount-plugin", attempt: 2, block: { code: "y", language: "chart" } },
+      { type: "mount-plugin", attempt: 2, block: { code: "y", language: "chart", complete: true } },
     ])
   })
 
@@ -182,12 +186,69 @@ describe("markdown code decoration", () => {
     expect(streaming.state).toBe(INITIAL_CODE_DECORATION_STATE)
   })
 
+  test("mounts a streaming contribution at the first character and updates it without remounting", () => {
+    const match = claim("chart", true)
+
+    const first = transitionCodeDecoration(INITIAL_CODE_DECORATION_STATE, {
+      type: "sync",
+      language: "chart",
+      source: "x",
+      complete: false,
+      match,
+    })
+
+    expect(first.effects).toEqual([
+      { type: "mount-plugin", attempt: 1, block: { code: "x", language: "chart", complete: false } },
+    ])
+
+    const next = transitionCodeDecoration(first.state, {
+      type: "sync",
+      language: "chart",
+      source: "xy",
+      complete: false,
+      match,
+    })
+
+    expect(next.state.status).toBe("plugin")
+    expect(next.effects).toEqual([
+      { type: "update-plugin", attempt: 1, block: { code: "xy", language: "chart", complete: false } },
+    ])
+
+    const done = transitionCodeDecoration(next.state, {
+      type: "sync",
+      language: "chart",
+      source: "xyz",
+      complete: true,
+      match,
+    })
+
+    expect(done.effects).toEqual([
+      { type: "update-plugin", attempt: 1, block: { code: "xyz", language: "chart", complete: true } },
+    ])
+  })
+
+  test("waits for the first character of a streaming contribution", () => {
+    const match = claim("chart", true)
+
+    const empty = transitionCodeDecoration(INITIAL_CODE_DECORATION_STATE, {
+      type: "sync",
+      language: "chart",
+      source: "",
+      complete: false,
+      match,
+    })
+
+    expect(empty.state).toBe(INITIAL_CODE_DECORATION_STATE)
+  })
+
   test("mounts actions for a complete block and moves them when it changes", () => {
-    const match = { render: new Set<string>(), actions: new Set(["sql"]) }
+    const match = { render: new Set<string>(), actions: new Set(["sql"]), stream: new Set<string>() }
     const event = { type: "sync", language: "sql", source: "select 1\n", complete: true, match } as const
     const mounted = transitionCodeDecoration(INITIAL_CODE_DECORATION_STATE, event)
 
-    expect(mounted.effects).toEqual([{ type: "mount-actions", block: { code: "select 1", language: "sql" } }])
+    expect(mounted.effects).toEqual([
+      { type: "mount-actions", block: { code: "select 1", language: "sql", complete: true } },
+    ])
     expect(transitionCodeDecoration(mounted.state, event).state).toBe(mounted.state)
     expect(transitionCodeDecoration(mounted.state, { ...event, match: undefined }).effects).toEqual([
       { type: "clear-actions" },
@@ -195,7 +256,7 @@ describe("markdown code decoration", () => {
   })
 
   test("clears mounted content on dispose and ignores results that arrive later", () => {
-    const match = { render: new Set(["chart"]), actions: new Set(["chart"]) }
+    const match = { render: new Set(["chart"]), actions: new Set(["chart"]), stream: new Set<string>() }
 
     const mounted = transitionCodeDecoration(INITIAL_CODE_DECORATION_STATE, {
       type: "sync",

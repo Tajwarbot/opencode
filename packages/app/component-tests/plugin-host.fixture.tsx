@@ -22,6 +22,7 @@ import {
 import type { BuiltinLayout, BuiltinLocale } from "@opencode/plugin/gui/builtin"
 import {
   createComponent,
+  createEffect,
   createMemo,
   createRoot,
   createSignal,
@@ -82,7 +83,17 @@ type Captured = { apis?: ReturnType<typeof createHostApis> }
 /** A value the fixture's storage holds as JSON. */
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json }
 
-export { createComponent, createMemo, createRoot, createSignal, getOwner, onCleanup, runWithOwner, useDialog }
+export {
+  createComponent,
+  createEffect,
+  createMemo,
+  createRoot,
+  createSignal,
+  getOwner,
+  onCleanup,
+  runWithOwner,
+  useDialog,
+}
 
 const layout: BuiltinLayout = {
   narrow: () => false,
