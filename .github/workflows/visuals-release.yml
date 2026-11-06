@@ -75,6 +75,7 @@ jobs:
       - run: cd artifacts && sha256sum * > SHA256SUMS.txt
       - uses: softprops/action-gh-release@v2
         with:
+          name: OpenCode Visuals
           files: artifacts/*
           body: |
             OpenCode Visuals is a fork of OpenCode with a built-in generative visual layer.
