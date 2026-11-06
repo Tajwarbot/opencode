@@ -164,6 +164,12 @@ import type {
   ExperimentalMcpConnectOutput,
   ExperimentalMcpDisconnectInput,
   ExperimentalMcpDisconnectOutput,
+  ExperimentalMcpAppCatalogInput,
+  ExperimentalMcpAppCatalogOutput,
+  ExperimentalMcpAppResourceInput,
+  ExperimentalMcpAppResourceOutput,
+  ExperimentalMcpAppToolInput,
+  ExperimentalMcpAppToolOutput,
   ExperimentalMcpClientTokenInput,
   ExperimentalMcpClientTokenOutput,
   CredentialListOutput,
@@ -1177,6 +1183,32 @@ const EndpointExperimentalMcpDisconnect = (raw: RawClient["server.mcp"]) => (inp
     ),
   )
 
+const EndpointExperimentalMcpAppCatalog = (raw: RawClient["server.mcp"]) => (input?: ExperimentalMcpAppCatalogInput) =>
+  preserveEffect<ExperimentalMcpAppCatalogOutput>()(
+    raw["mcp.app.catalog"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalMcpAppResource = (raw: RawClient["server.mcp"]) => (input: ExperimentalMcpAppResourceInput) =>
+  preserveEffect<ExperimentalMcpAppResourceOutput>()(
+    raw["mcp.app.resource"]({
+      query: { location: input["location"] },
+      payload: { server: input["server"], uri: input["uri"] },
+    }).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalMcpAppTool = (raw: RawClient["server.mcp"]) => (input: ExperimentalMcpAppToolInput) =>
+  preserveEffect<ExperimentalMcpAppToolOutput>()(
+    raw["mcp.app.tool"]({
+      query: { location: input["location"] },
+      payload: {
+        sessionID: input["sessionID"],
+        server: input["server"],
+        tool: input["tool"],
+        arguments: input["arguments"],
+      },
+    }).pipe(Effect.mapError(mapClientError)),
+  )
+
 const EndpointExperimentalMcpClientToken = (raw: RawClient["server.mcp"]) => (input: ExperimentalMcpClientTokenInput) =>
   preserveEffect<ExperimentalMcpClientTokenOutput>()(
     raw["mcp.clientToken"]({
@@ -1190,6 +1222,11 @@ const adaptGroupExperimentalMcp = (raw: RawClient["server.mcp"]) => ({
   remove: EndpointExperimentalMcpRemove(raw),
   connect: EndpointExperimentalMcpConnect(raw),
   disconnect: EndpointExperimentalMcpDisconnect(raw),
+  app: {
+    catalog: EndpointExperimentalMcpAppCatalog(raw),
+    resource: EndpointExperimentalMcpAppResource(raw),
+    tool: EndpointExperimentalMcpAppTool(raw),
+  },
   client: { token: EndpointExperimentalMcpClientToken(raw) },
 })
 
@@ -2066,6 +2103,15 @@ const adaptClient = (raw: RawClient) => {
       connect: client.experimental.mcp.connect,
       /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
       disconnect: client.experimental.mcp.disconnect,
+      /** @deprecated Use `client.experimental.mcp.app`. Removed in the next minor. */
+      app: {
+        /** @deprecated Use `client.experimental.mcp.app.catalog`. Removed in the next minor. */
+        catalog: client.experimental.mcp.app.catalog,
+        /** @deprecated Use `client.experimental.mcp.app.resource`. Removed in the next minor. */
+        resource: client.experimental.mcp.app.resource,
+        /** @deprecated Use `client.experimental.mcp.app.tool`. Removed in the next minor. */
+        tool: client.experimental.mcp.app.tool,
+      },
       /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
       client: {
         /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */

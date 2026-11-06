@@ -110,6 +110,7 @@ export interface CallToolResult {
   readonly isError: boolean
   readonly structured?: unknown
   readonly content: ReadonlyArray<CallToolContent>
+  readonly meta?: Record<string, unknown>
 }
 
 export type ElicitationFormParams = ElicitRequestFormParams
@@ -608,6 +609,7 @@ function toCallToolResult(result: SdkCallToolResult): CallToolResult {
   return {
     isError: result.isError === true,
     structured: result.structuredContent,
+    meta: "_meta" in result ? (result._meta as Record<string, unknown> | undefined) : undefined,
     content: result.content.flatMap((part): CallToolContent[] => {
       if (part.type === "text") return [{ type: "text", text: part.text }]
       if (part.type === "image" || part.type === "audio")

@@ -2,12 +2,14 @@ export * as McpTool from "./mcp.js"
 
 import { ToolFailure } from "@opencode/ai/effect"
 import { McpEvent } from "@opencode/schema/mcp-event"
+import type { Session } from "@opencode/schema/session"
 import { Context, Effect, Fiber, type JsonSchema, Layer, Option, PubSub, Schema, Semaphore, Stream } from "effect"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
 import { extension } from "mime-types"
 import { Bus } from "../bus.js"
 
 import { Mcp } from "../mcp/index.js"
+import { appVisible, modelVisible } from "../mcp/app.js"
 import { Mime } from "../mime.js"
 import { Permission } from "../permission.js"
 import { Tool } from "../tool.js"
@@ -30,6 +32,16 @@ export interface Interface {
    * finish, then bring the registry up to date without waiting for the debounced reload.
    */
   readonly flush: Effect.Effect<void>
+  /**
+   * Calls a tool on behalf of an MCP App. The same permission action and input metadata apply as a model
+   * call, and a tool must declare app visibility before its own server's app can call it.
+   */
+  readonly callForApp: (input: {
+    readonly sessionID: Session.ID
+    readonly server: string
+    readonly name: string
+    readonly args?: Record<string, unknown>
+  }) => Effect.Effect<Mcp.ToolResult, ToolFailure>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/McpTool") {}
@@ -52,6 +64,8 @@ export const layer = Layer.effect(
           discovered = yield* mcp.tools()
           yield* tools.transform((editor) => {
             for (const tool of discovered) {
+              if (!modelVisible(tool._meta)) continue
+
               editor.add({
                 name: tool.name,
                 options: { namespace: namespace(tool.server), codemode: tool.codemode !== false },
@@ -147,6 +161,39 @@ export const layer = Layer.effect(
         const current = yield* mcp.tools()
         if (current.length !== discovered.length || current.some((tool, index) => tool !== discovered[index]))
           yield* reconcile
+      }),
+      callForApp: Effect.fn("McpTool.callForApp")(function* (input) {
+        yield* Fiber.await(initial)
+        const tool = discovered.find((item) => item.server === input.server && item.name === input.name)
+
+        if (!tool) return yield* new ToolFailure({ message: `MCP server "${input.server}" has no tool "${input.name}"` })
+        if (!appVisible(tool._meta))
+          return yield* new ToolFailure({ message: `MCP tool "${input.name}" does not allow app calls` })
+
+        yield* permission
+          .assert({
+            sessionID: input.sessionID,
+            action: name(tool.server, tool.name),
+            resources: ["*"],
+            save: ["*"],
+            metadata: { input: input.args ?? {} },
+          })
+          .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
+
+        const result = yield* mcp
+          .callTool({ server: tool.server, name: tool.name, args: input.args, sessionID: input.sessionID })
+          .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
+
+        if (result.isError)
+          return yield* new ToolFailure({
+            message:
+              result.content
+                .flatMap((part) => (part.type === "text" ? [part.text] : []))
+                .join("\n")
+                .trim() || "MCP tool returned an error",
+          })
+
+        return result
       }),
     })
   }),

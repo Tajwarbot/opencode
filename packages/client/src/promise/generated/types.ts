@@ -276,6 +276,35 @@ export type McpResourceTemplate = {
   mimeType?: string
 }
 
+export type McpAppLink = {
+  server: string
+  tool: string
+  name: string
+  title?: string
+  description?: string
+  resourceUri: string
+  visibility?: Array<"model" | "app">
+  inputSchema?: { [x: string]: JsonValue }
+}
+
+export type McpUiCsp = {
+  connectDomains?: Array<string>
+  resourceDomains?: Array<string>
+  frameDomains?: Array<string>
+  baseUriDomains?: Array<string>
+}
+
+export type McpUiPermissions = {
+  camera: JsonValue
+  microphone: JsonValue
+  geolocation: JsonValue
+  clipboardWrite: JsonValue
+}
+
+export type McpAppToolContent =
+  | { type: "text"; text: string }
+  | { type: "media"; data: string; mimeType: string; uri?: string }
+
 export type PtyTicketConnectToken = { ticket: string; expires_in: number }
 
 export type CredentialKey = { type: "key"; key: string; metadata?: { [x: string]: JsonValue } }
@@ -783,6 +812,22 @@ export type McpServer = {
 }
 
 export type McpResourceCatalog = { resources: Array<McpResource>; templates: Array<McpResourceTemplate> }
+
+export type McpAppCatalog = { apps: Array<McpAppLink> }
+
+export type McpUiResourceMeta = {
+  csp?: McpUiCsp
+  permissions?: McpUiPermissions
+  domain?: string
+  prefersBorder?: boolean
+}
+
+export type McpAppToolResult = {
+  isError: boolean
+  content: Array<McpAppToolContent>
+  structured: JsonValue
+  meta?: { [x: string]: JsonValue }
+}
 
 export type Project = {
   id: ProjectID
@@ -2167,6 +2212,8 @@ export type VoiceSessionResponse = { data: { transport: VoiceTransport } }
 export type CredentialValue = CredentialOAuth | CredentialKey | CredentialExternal
 
 export type ConnectionInfo = ConnectionCredentialInfo | ConnectionEnvInfo
+
+export type McpAppResource = { server: string; uri: string; mimeType: string; html: string; ui?: McpUiResourceMeta }
 
 export type PtyCreated = {
   id: EventID
@@ -4159,6 +4206,30 @@ export type ExperimentalMcpDisconnectInput = {
 
 export type ExperimentalMcpDisconnectOutput = void
 
+export type ExperimentalMcpAppCatalogInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+
+export type ExperimentalMcpAppCatalogOutput = { location: LocationPublicRef; data: McpAppCatalog }
+
+export type ExperimentalMcpAppResourceInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly server: string
+  readonly uri: string
+}
+
+export type ExperimentalMcpAppResourceOutput = { location: LocationPublicRef; data: McpAppResource }
+
+export type ExperimentalMcpAppToolInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly sessionID: string
+  readonly server: string
+  readonly tool: string
+  readonly arguments?: { readonly [x: string]: unknown } | undefined
+}
+
+export type ExperimentalMcpAppToolOutput = { location: LocationPublicRef; data: McpAppToolResult }
+
 export type ExperimentalMcpClientTokenInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
   readonly name: string
@@ -4966,6 +5037,24 @@ export type McpDisconnectInput = ExperimentalMcpDisconnectInput
 
 /** @deprecated Use `ExperimentalMcpDisconnectOutput`. Removed in the next minor. */
 export type McpDisconnectOutput = ExperimentalMcpDisconnectOutput
+
+/** @deprecated Use `ExperimentalMcpAppCatalogInput`. Removed in the next minor. */
+export type McpAppCatalogInput = ExperimentalMcpAppCatalogInput
+
+/** @deprecated Use `ExperimentalMcpAppCatalogOutput`. Removed in the next minor. */
+export type McpAppCatalogOutput = ExperimentalMcpAppCatalogOutput
+
+/** @deprecated Use `ExperimentalMcpAppResourceInput`. Removed in the next minor. */
+export type McpAppResourceInput = ExperimentalMcpAppResourceInput
+
+/** @deprecated Use `ExperimentalMcpAppResourceOutput`. Removed in the next minor. */
+export type McpAppResourceOutput = ExperimentalMcpAppResourceOutput
+
+/** @deprecated Use `ExperimentalMcpAppToolInput`. Removed in the next minor. */
+export type McpAppToolInput = ExperimentalMcpAppToolInput
+
+/** @deprecated Use `ExperimentalMcpAppToolOutput`. Removed in the next minor. */
+export type McpAppToolOutput = ExperimentalMcpAppToolOutput
 
 /** @deprecated Use `ExperimentalMcpClientTokenInput`. Removed in the next minor. */
 export type McpClientTokenInput = ExperimentalMcpClientTokenInput

@@ -35,6 +35,7 @@ import { Location } from "../location.js"
 import { waitForAbort } from "@opencode/util/process"
 import { State } from "../state.js"
 import type { McpClient } from "./client.js"
+import { readResourceUi } from "./app.js"
 import { McpConnection } from "./connection.js"
 import { McpPool } from "./pool.js"
 
@@ -66,6 +67,12 @@ export const ResourceCatalog = Mcp.ResourceCatalog
 export type ResourceCatalog = Mcp.ResourceCatalog
 export const ResourceContent = Mcp.ResourceContent
 export type ResourceContent = Mcp.ResourceContent
+export const AppCatalog = Mcp.AppCatalog
+export type AppCatalog = Mcp.AppCatalog
+export const AppResource = Mcp.AppResource
+export type AppResource = Mcp.AppResource
+export const AppToolResult = Mcp.AppToolResult
+export type AppToolResult = Mcp.AppToolResult
 
 export class NotFoundError extends Schema.TaggedError<NotFoundError>()("MCP.NotFoundError", {
   server: ServerName,
@@ -892,6 +899,8 @@ export const layer = (options?: Options) =>
             connection.readResource({ uri: input.uri }),
           )
           if (!result) return undefined
+          const ui = readResourceUi(result.contents[0]?._meta)
+
           return ResourceContent.make({
             server: name,
             uri: input.uri,
@@ -900,6 +909,7 @@ export const layer = (options?: Options) =>
                 ? { type: "text", uri: part.uri, text: part.text, mimeType: part.mimeType }
                 : { type: "blob", uri: part.uri, blob: part.blob, mimeType: part.mimeType },
             ),
+            ...(ui === undefined ? {} : { ui }),
           })
         }),
       })

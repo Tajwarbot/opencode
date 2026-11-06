@@ -1,6 +1,8 @@
 import { Location } from "@opencode/core/location"
 import { LocationServiceMap } from "@opencode/core/location-service-map"
 import { Mcp } from "@opencode/core/mcp/index"
+import { readToolUi } from "@opencode/core/mcp/app"
+import { McpTool } from "@opencode/core/tool/mcp"
 import { PtyTicket } from "@opencode/core/pty/ticket"
 import { ForbiddenError, McpServerNotFoundError } from "@opencode/protocol/errors"
 import { PTY_CONNECT_TOKEN_HEADER, PTY_CONNECT_TOKEN_HEADER_VALUE } from "@opencode/protocol/groups/pty"
@@ -67,6 +69,109 @@ export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
         Effect.fn(function* () {
           const service = yield* Mcp.Service
           return yield* response(service.resourceCatalog())
+        }),
+      )
+      .handle(
+        "mcp.app.catalog",
+        Effect.fn(function* () {
+          const service = yield* Mcp.Service
+
+          return yield* response(
+            service.tools().pipe(
+              Effect.map((tools) =>
+                Mcp.AppCatalog.make({
+                  apps: tools.flatMap((tool) => {
+                    const ui = readToolUi(tool._meta)
+
+                    if (!ui.resourceUri) return []
+
+                    return [
+                      {
+                        server: tool.server,
+                        tool: tool.name,
+                        name: McpTool.name(tool.server, tool.name),
+                        title: tool.title,
+                        description: tool.description,
+                        resourceUri: ui.resourceUri,
+                        visibility: [...ui.visibility],
+                        inputSchema: tool.inputSchema,
+                      },
+                    ]
+                  }),
+                }),
+              ),
+            ),
+          )
+        }),
+      )
+      .handle(
+        "mcp.app.resource",
+        Effect.fn(function* (ctx) {
+          const service = yield* Mcp.Service
+
+          return yield* response(
+            Effect.gen(function* () {
+              const content = yield* service
+                .readResource({ server: ctx.payload.server, uri: ctx.payload.uri })
+                .pipe(
+                  Effect.mapError(
+                    (error) => new McpServerNotFoundError({ server: ctx.payload.server, message: error.message }),
+                  ),
+                )
+
+              if (!content)
+                return yield* new McpServerNotFoundError({
+                  server: ctx.payload.server,
+                  message: `MCP server "${ctx.payload.server}" does not provide resources`,
+                })
+
+              const part = content.contents[0]
+
+              if (!part) throw new Error(`MCP App resource ${ctx.payload.uri} is empty`)
+
+              return Mcp.AppResource.make({
+                server: content.server,
+                uri: content.uri,
+                mimeType: part.mimeType ?? "text/html;profile=mcp-app",
+                html: "text" in part ? part.text : Buffer.from(part.blob, "base64").toString("utf8"),
+                ...(content.ui === undefined ? {} : { ui: content.ui }),
+              })
+            }),
+          )
+        }),
+      )
+      .handle(
+        "mcp.app.tool",
+        Effect.fn(function* (ctx) {
+          const tool = yield* McpTool.Service
+
+          return yield* response(
+            tool
+              .callForApp({
+                sessionID: ctx.payload.sessionID,
+                server: ctx.payload.server,
+                name: ctx.payload.tool,
+                args: ctx.payload.arguments,
+              })
+              .pipe(
+                Effect.catch((error) =>
+                  Effect.succeed({
+                    isError: true,
+                    content: [{ type: "text" as const, text: error.message }],
+                    structured: undefined,
+                    meta: undefined,
+                  }),
+                ),
+                Effect.map((result) =>
+                  Mcp.AppToolResult.make({
+                    isError: result.isError,
+                    content: [...result.content],
+                    ...(result.structured === undefined ? {} : { structured: result.structured }),
+                    ...(result.meta === undefined ? {} : { meta: result.meta }),
+                  }),
+                ),
+              ),
+          )
         }),
       )
       .handle(

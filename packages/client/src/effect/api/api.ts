@@ -1755,6 +1755,18 @@ export interface McpApi<E = never> {
   /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
   readonly disconnect: ExperimentalMcpDisconnectOperation<E>
 
+  /** @deprecated Use `client.experimental.mcp.app`. Removed in the next minor. */
+  readonly app: {
+    /** @deprecated Use `client.experimental.mcp.app.catalog`. Removed in the next minor. */
+    readonly catalog: ExperimentalMcpAppCatalogOperation<E>
+
+    /** @deprecated Use `client.experimental.mcp.app.resource`. Removed in the next minor. */
+    readonly resource: ExperimentalMcpAppResourceOperation<E>
+
+    /** @deprecated Use `client.experimental.mcp.app.tool`. Removed in the next minor. */
+    readonly tool: ExperimentalMcpAppToolOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
   readonly client: {
     /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
@@ -1799,6 +1811,36 @@ export type ExperimentalMcpDisconnectOperation<E = never> = (
   input: ExperimentalMcpDisconnectInput,
 ) => Effect.Effect<ExperimentalMcpDisconnectOutput, E>
 
+export type ExperimentalMcpAppCatalogInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ExperimentalMcpAppCatalogOutput = { readonly location: Location.PublicRef; readonly data: Mcp.AppCatalog }
+export type ExperimentalMcpAppCatalogOperation<E = never> = (
+  input?: ExperimentalMcpAppCatalogInput,
+) => Effect.Effect<ExperimentalMcpAppCatalogOutput, E>
+
+export type ExperimentalMcpAppResourceInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly server: string
+  readonly uri: string
+}
+export type ExperimentalMcpAppResourceOutput = { readonly location: Location.PublicRef; readonly data: Mcp.AppResource }
+export type ExperimentalMcpAppResourceOperation<E = never> = (
+  input: ExperimentalMcpAppResourceInput,
+) => Effect.Effect<ExperimentalMcpAppResourceOutput, E>
+
+export type ExperimentalMcpAppToolInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly sessionID: Session.ID
+  readonly server: string
+  readonly tool: string
+  readonly arguments?: { readonly [x: string]: unknown } | undefined
+}
+export type ExperimentalMcpAppToolOutput = { readonly location: Location.PublicRef; readonly data: Mcp.AppToolResult }
+export type ExperimentalMcpAppToolOperation<E = never> = (
+  input: ExperimentalMcpAppToolInput,
+) => Effect.Effect<ExperimentalMcpAppToolOutput, E>
+
 export type ExperimentalMcpClientTokenInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
   readonly name: string
@@ -1817,6 +1859,11 @@ export interface ExperimentalMcpApi<E = never> {
   readonly remove: ExperimentalMcpRemoveOperation<E>
   readonly connect: ExperimentalMcpConnectOperation<E>
   readonly disconnect: ExperimentalMcpDisconnectOperation<E>
+  readonly app: {
+    readonly catalog: ExperimentalMcpAppCatalogOperation<E>
+    readonly resource: ExperimentalMcpAppResourceOperation<E>
+    readonly tool: ExperimentalMcpAppToolOperation<E>
+  }
   readonly client: { readonly token: ExperimentalMcpClientTokenOperation<E> }
 }
 
@@ -2962,6 +3009,33 @@ export type McpDisconnectOutput = ExperimentalMcpDisconnectOutput
 
 /** @deprecated Use `ExperimentalMcpDisconnectOperation`. Removed in the next minor. */
 export type McpDisconnectOperation<E = never> = ExperimentalMcpDisconnectOperation<E>
+
+/** @deprecated Use `ExperimentalMcpAppCatalogInput`. Removed in the next minor. */
+export type McpAppCatalogInput = ExperimentalMcpAppCatalogInput
+
+/** @deprecated Use `ExperimentalMcpAppCatalogOutput`. Removed in the next minor. */
+export type McpAppCatalogOutput = ExperimentalMcpAppCatalogOutput
+
+/** @deprecated Use `ExperimentalMcpAppCatalogOperation`. Removed in the next minor. */
+export type McpAppCatalogOperation<E = never> = ExperimentalMcpAppCatalogOperation<E>
+
+/** @deprecated Use `ExperimentalMcpAppResourceInput`. Removed in the next minor. */
+export type McpAppResourceInput = ExperimentalMcpAppResourceInput
+
+/** @deprecated Use `ExperimentalMcpAppResourceOutput`. Removed in the next minor. */
+export type McpAppResourceOutput = ExperimentalMcpAppResourceOutput
+
+/** @deprecated Use `ExperimentalMcpAppResourceOperation`. Removed in the next minor. */
+export type McpAppResourceOperation<E = never> = ExperimentalMcpAppResourceOperation<E>
+
+/** @deprecated Use `ExperimentalMcpAppToolInput`. Removed in the next minor. */
+export type McpAppToolInput = ExperimentalMcpAppToolInput
+
+/** @deprecated Use `ExperimentalMcpAppToolOutput`. Removed in the next minor. */
+export type McpAppToolOutput = ExperimentalMcpAppToolOutput
+
+/** @deprecated Use `ExperimentalMcpAppToolOperation`. Removed in the next minor. */
+export type McpAppToolOperation<E = never> = ExperimentalMcpAppToolOperation<E>
 
 /** @deprecated Use `ExperimentalMcpClientTokenInput`. Removed in the next minor. */
 export type McpClientTokenInput = ExperimentalMcpClientTokenInput

@@ -1,5 +1,6 @@
 import { Mcp } from "@opencode/schema/mcp"
 import { Location } from "@opencode/schema/location"
+import { Session } from "@opencode/schema/session"
 import { PtyTicket } from "@opencode/schema/pty-ticket"
 import { Context, Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/http-api"
@@ -113,6 +114,57 @@ export const makeMcpGroup = <LocationId extends HttpApiMiddleware.AnyId, Locatio
             identifier: "mcp.resource.catalog",
             summary: "List MCP resources",
             description: "Retrieve resources and resource templates from connected MCP servers.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("mcp.app.catalog", "/api/experimental/mcp/app", {
+        query: LocationQuery,
+        success: Location.response(Mcp.AppCatalog),
+      })
+        .annotateMerge(locationQueryOpenApi)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "experimental.mcp.app.catalog",
+            summary: "List MCP Apps",
+            description: "Retrieve MCP tools that declare a native interface resource. Experimental: may change without compatibility guarantees.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("mcp.app.resource", "/api/experimental/mcp/app/resource", {
+        query: LocationQuery,
+        payload: Schema.Struct({ server: Schema.String, uri: Schema.String }),
+        success: Location.response(Mcp.AppResource),
+        error: McpServerNotFoundError,
+      })
+        .annotateMerge(locationQueryOpenApi)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "experimental.mcp.app.resource",
+            summary: "Read an MCP App resource",
+            description: "Read a ui:// resource from its MCP server and return its HTML document. Experimental: may change without compatibility guarantees.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("mcp.app.tool", "/api/experimental/mcp/app/tool", {
+        query: LocationQuery,
+        payload: Schema.Struct({
+          sessionID: Session.ID,
+          server: Schema.String,
+          tool: Schema.String,
+          arguments: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+        }),
+        success: Location.response(Mcp.AppToolResult),
+        error: McpServerNotFoundError,
+      })
+        .annotateMerge(locationQueryOpenApi)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "experimental.mcp.app.tool",
+            summary: "Call an MCP App tool",
+            description: "Call a tool on behalf of an MCP App, subject to the same permission rules as a model call. Experimental: may change without compatibility guarantees.",
           }),
         ),
     )

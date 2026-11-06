@@ -146,9 +146,84 @@ export const ResourceContentPart = Schema.Union([
 ]).pipe(Schema.toTaggedUnion("type"), Schema.annotate({ identifier: "Mcp.ResourceContentPart" }))
 export type ResourceContentPart = typeof ResourceContentPart.Type
 
+/** Content Security Policy domains an MCP App declares for its view. */
+export interface UiCsp extends Schema.Schema.Type<typeof UiCsp> {}
+export const UiCsp = Schema.Struct({
+  connectDomains: optional(Schema.Array(Schema.String)),
+  resourceDomains: optional(Schema.Array(Schema.String)),
+  frameDomains: optional(Schema.Array(Schema.String)),
+  baseUriDomains: optional(Schema.Array(Schema.String)),
+}).annotate({ identifier: "Mcp.UiCsp" })
+
+/** Browser permissions an MCP App declares. A present key is a request; the host decides whether to grant it. */
+export interface UiPermissions extends Schema.Schema.Type<typeof UiPermissions> {}
+export const UiPermissions = Schema.Struct({
+  camera: optional(Schema.Unknown),
+  microphone: optional(Schema.Unknown),
+  geolocation: optional(Schema.Unknown),
+  clipboardWrite: optional(Schema.Unknown),
+}).annotate({ identifier: "Mcp.UiPermissions" })
+
+/** Visual and security metadata for an MCP App resource. */
+export interface UiResourceMeta extends Schema.Schema.Type<typeof UiResourceMeta> {}
+export const UiResourceMeta = Schema.Struct({
+  csp: optional(UiCsp),
+  permissions: optional(UiPermissions),
+  domain: optional(Schema.String),
+  prefersBorder: optional(Schema.Boolean),
+}).annotate({ identifier: "Mcp.UiResourceMeta" })
+
 export interface ResourceContent extends Schema.Schema.Type<typeof ResourceContent> {}
 export const ResourceContent = Schema.Struct({
   server: Schema.String,
   uri: Schema.String,
   contents: Schema.Array(ResourceContentPart),
+  ui: optional(UiResourceMeta),
 }).annotate({ identifier: "Mcp.ResourceContent" })
+
+/** A tool linked to a UI resource. `name` is the namespaced tool name the model and session use. */
+export interface AppLink extends Schema.Schema.Type<typeof AppLink> {}
+export const AppLink = Schema.Struct({
+  server: Schema.String,
+  tool: Schema.String,
+  name: Schema.String,
+  title: optional(Schema.String),
+  description: optional(Schema.String),
+  resourceUri: Schema.String,
+  visibility: optional(Schema.Array(Schema.Literals(["model", "app"]))),
+  inputSchema: optional(Schema.Record(Schema.String, Schema.Unknown)),
+}).annotate({ identifier: "Mcp.AppLink" })
+
+export interface AppCatalog extends Schema.Schema.Type<typeof AppCatalog> {}
+export const AppCatalog = Schema.Struct({
+  apps: Schema.Array(AppLink),
+}).annotate({ identifier: "Mcp.AppCatalog" })
+
+/** A fetched `ui://` document, ready for a sandboxed frame. */
+export interface AppResource extends Schema.Schema.Type<typeof AppResource> {}
+export const AppResource = Schema.Struct({
+  server: Schema.String,
+  uri: Schema.String,
+  mimeType: Schema.String,
+  html: Schema.String,
+  ui: optional(UiResourceMeta),
+}).annotate({ identifier: "Mcp.AppResource" })
+
+export const AppToolContent = Schema.Union([
+  Schema.Struct({ type: Schema.Literal("text"), text: Schema.String }),
+  Schema.Struct({
+    type: Schema.Literal("media"),
+    data: Schema.String,
+    mimeType: Schema.String,
+    uri: optional(Schema.String),
+  }),
+]).pipe(Schema.toTaggedUnion("type"), Schema.annotate({ identifier: "Mcp.AppToolContent" }))
+export type AppToolContent = typeof AppToolContent.Type
+
+export interface AppToolResult extends Schema.Schema.Type<typeof AppToolResult> {}
+export const AppToolResult = Schema.Struct({
+  isError: Schema.Boolean,
+  content: Schema.Array(AppToolContent),
+  structured: optional(Schema.Unknown),
+  meta: optional(Schema.Record(Schema.String, Schema.Unknown)),
+}).annotate({ identifier: "Mcp.AppToolResult" })

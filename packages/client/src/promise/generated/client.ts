@@ -158,6 +158,12 @@ import type {
   ExperimentalMcpConnectOutput,
   ExperimentalMcpDisconnectInput,
   ExperimentalMcpDisconnectOutput,
+  ExperimentalMcpAppCatalogInput,
+  ExperimentalMcpAppCatalogOutput,
+  ExperimentalMcpAppResourceInput,
+  ExperimentalMcpAppResourceOutput,
+  ExperimentalMcpAppToolInput,
+  ExperimentalMcpAppToolOutput,
   ExperimentalMcpClientTokenInput,
   ExperimentalMcpClientTokenOutput,
   CredentialListOutput,
@@ -1310,6 +1316,51 @@ export function make(options: ClientOptions) {
             },
             requestOptions,
           ),
+        app: {
+          catalog: (input?: ExperimentalMcpAppCatalogInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalMcpAppCatalogOutput>(
+              {
+                method: "GET",
+                path: `/api/experimental/mcp/app`,
+                query: { location: input?.["location"] },
+                successStatus: 200,
+                declaredStatuses: [400, 401, 404],
+                empty: false,
+              },
+              requestOptions,
+            ),
+          resource: (input: ExperimentalMcpAppResourceInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalMcpAppResourceOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/mcp/app/resource`,
+                query: { location: input["location"] },
+                body: { server: input["server"], uri: input["uri"] },
+                successStatus: 200,
+                declaredStatuses: [400, 401, 404],
+                empty: false,
+              },
+              requestOptions,
+            ),
+          tool: (input: ExperimentalMcpAppToolInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalMcpAppToolOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/mcp/app/tool`,
+                query: { location: input["location"] },
+                body: {
+                  sessionID: input["sessionID"],
+                  server: input["server"],
+                  tool: input["tool"],
+                  arguments: input["arguments"],
+                },
+                successStatus: 200,
+                declaredStatuses: [400, 401, 404],
+                empty: false,
+              },
+              requestOptions,
+            ),
+        },
         client: {
           token: (input: ExperimentalMcpClientTokenInput, requestOptions?: RequestOptions) =>
             request<ExperimentalMcpClientTokenOutput>(
@@ -2752,6 +2803,15 @@ export function make(options: ClientOptions) {
       connect: client.experimental.mcp.connect,
       /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
       disconnect: client.experimental.mcp.disconnect,
+      /** @deprecated Use `client.experimental.mcp.app`. Removed in the next minor. */
+      app: {
+        /** @deprecated Use `client.experimental.mcp.app.catalog`. Removed in the next minor. */
+        catalog: client.experimental.mcp.app.catalog,
+        /** @deprecated Use `client.experimental.mcp.app.resource`. Removed in the next minor. */
+        resource: client.experimental.mcp.app.resource,
+        /** @deprecated Use `client.experimental.mcp.app.tool`. Removed in the next minor. */
+        tool: client.experimental.mcp.app.tool,
+      },
       /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
       client: {
         /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
