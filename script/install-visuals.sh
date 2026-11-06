@@ -47,9 +47,13 @@ fi
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
 
 app="$APP_DIR/OpenCodeVisuals.AppImage"
+tmp="$app.download"
 echo "Downloading $url"
-curl -fL "$url" -o "$app"
-chmod +x "$app"
+trap 'rm -f "$tmp"' EXIT
+curl -fL "$url" -o "$tmp"
+chmod +x "$tmp"
+mv -f "$tmp" "$app"
+trap - EXIT
 
 launcher="$BIN_DIR/opencode-visuals"
 rm -f "$launcher"
