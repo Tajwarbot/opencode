@@ -51,3 +51,32 @@ story("visual plots draw while their fence streams", async ({ page }) => {
 
   expect(path?.split("L")).toHaveLength(3)
 })
+
+story("a streamed visual that ends invalid falls back to its code", async ({ page }) => {
+  const host = await page.evaluateHandle(async (fixture) => {
+    const { builtins, mountCodeBlocks, until } = await import(fixture)
+    const visual = builtins.find((entry: { id: string }) => entry.id === "visual")
+
+    if (!visual) throw new Error("The visual built-in is missing.")
+
+    const host: CodeBlocksHost = mountCodeBlocks({ definitions: [visual] })
+
+    await until(() => host.status("visual") === "active")
+    host.show(
+      '```visual\n{"v":1,"kind":"plot","title":"Broken","data":{"series":[{"points":[[1,2]]',
+      true,
+    )
+
+    return host
+  }, fixture)
+
+  const root = page.getByTestId("code-blocks")
+  const block = root.locator('[data-component="markdown-code"]')
+
+  await expect(block.getByRole("heading", { name: "Broken" })).toBeVisible()
+
+  await host.evaluate((host) => host.show('```visual\n{"v":1,"kind":"plot","title":"Broken","data":{,}}\n```\n'))
+
+  await expect(block.locator("pre")).toBeVisible()
+  await expect(block.locator(".vz")).toHaveCount(0)
+})
