@@ -46,7 +46,7 @@ export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
   const yLog = () => str(yMeta().scale, "linear") === "log"
 
   const rawXDomain = (): [number, number] | undefined => {
-    const declared = pairs(xMeta().domain)[0]
+    const declared = pair(xMeta().domain)
 
     if (declared) return declared
     const values = all().map((point) => point[0])
@@ -61,7 +61,7 @@ export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
   }
 
   const rawYDomain = (): [number, number] | undefined => {
-    const declared = pairs(yMeta().domain)[0]
+    const declared = pair(yMeta().domain)
 
     if (declared) return declared
     const values = all().map((point) => point[1])
@@ -151,13 +151,18 @@ export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
   const xLabel = () => [str(xMeta().label, ""), str(xMeta().unit, "")].filter(Boolean).join(", ")
   const yLabel = () => [str(yMeta().label, ""), str(yMeta().unit, "")].filter(Boolean).join(", ")
 
+  // A declared domain keeps the ticks still, so only the moving end labels wait for the closing fence.
+  const fixed = () => pair(xMeta().domain) !== undefined && pair(yMeta().domain) !== undefined
+  const hideText = () => props.streaming && !fixed()
+
   return (
     <VisualFrame
       spec={props.spec}
       stage={
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          classList={{ "vz-streaming": props.streaming }}
+          classList={{ "vz-streaming": hideText() }}
+          data-streaming={props.streaming ? "true" : undefined}
           role="img"
           aria-label={props.spec.title}
         >
@@ -255,7 +260,7 @@ export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
                 <g>
                   <circle cx={px} cy={py} r={2.4} fill={item.tone === "accent" ? "var(--v-accent)" : "var(--v-fg-2)"} />
                   <text
-                    class={item.tone === "accent" ? "vz-svg-key" : undefined}
+                    classList={{ "vz-svg-key": item.tone === "accent", "vz-streaming-label": props.streaming }}
                     x={anchor === "end" ? px - 8 : px + 8}
                     y={py - 14}
                     text-anchor={anchor}
@@ -276,7 +281,12 @@ export function PlotVisual(props: { spec: VisualSpec; streaming?: boolean }) {
               return (
                 <>
                   <line class="vz-guide" x1={xScale()(at[0])} x2={xScale()(at[0])} y1={yScale()(at[1])} y2={yScale()(at[1]) - 14} />
-                  <text x={xScale()(at[0])} y={yScale()(at[1]) - 18} text-anchor="middle">
+                  <text
+                    classList={{ "vz-streaming-label": props.streaming }}
+                    x={xScale()(at[0])}
+                    y={yScale()(at[1]) - 18}
+                    text-anchor="middle"
+                  >
                     {short(str(item.label, ""), 24)}
                   </text>
                 </>

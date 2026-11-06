@@ -473,7 +473,8 @@
   transition: opacity 180ms ease;
 }
 
-.vz-stage svg.vz-streaming text {
+.vz-stage svg.vz-streaming text,
+.vz-stage svg .vz-streaming-label {
   opacity: 0;
 }
 

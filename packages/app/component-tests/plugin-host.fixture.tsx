@@ -41,12 +41,13 @@ import { Persist, persisted } from "@/runtime/persistence/storage"
 import { ServerScope } from "@/runtime/server/scope"
 import { PluginHostProvider, usePluginHost, type HostApiFactories, type PluginInput } from "../src/runtime/plugin/host"
 import { createHostApis } from "../src/runtime/plugin/host-apis"
+import { builtins } from "@opencode/gui-plugins/renderer"
 import type { Bridge, Entry } from "@opencode/plugin/gui/host"
 import { createRegion, RegionContent } from "../src/runtime/plugin/panels"
 import { createSessionScreenLayout } from "../src/session/screen-layout"
 import type { SessionModel } from "../src/session/model"
 import { createClosedTabs } from "../src/runtime/plugin/closed-tabs"
-import { PluginLinks, PluginSlot, PluginThemes } from "../src/runtime/plugin/render"
+import { PluginLinks, PluginSlot, PluginStyles, PluginThemes } from "../src/runtime/plugin/render"
 import { Markdown } from "@opencode/session-ui/markdown"
 import { ThemeProvider, useTheme, type ColorScheme } from "@opencode/ui/theme/context"
 import { persistedHandle } from "../src/runtime/plugin/stores"
@@ -82,6 +83,8 @@ type Captured = { apis?: ReturnType<typeof createHostApis> }
 
 /** A value the fixture's storage holds as JSON. */
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json }
+
+export { builtins }
 
 export {
   createComponent,
@@ -882,6 +885,7 @@ export function mountCodeBlocks(input: { definitions: readonly Entry[] }) {
         apis={apis.apis}
         whenMounted={apis.whenMounted}
       >
+        <PluginStyles />
         <Message />
       </PluginHostProvider>
     )

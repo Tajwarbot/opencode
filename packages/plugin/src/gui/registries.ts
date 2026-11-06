@@ -720,8 +720,9 @@ export interface CodeBlockProps {
  * rendered there. `ctx.ui.Code`, and Markdown your own render shows, keep the plain code, so a render never meets
  * itself.
  *
- * The host renders a block only once its closing fence arrives: while it streams, and in a message that stopped
- * mid-block, the user sees the highlighted code, then your UI replaces it in place. Blocks of other languages cost
+ * By default the host renders a block only once its closing fence arrives: while it streams, and in a message that
+ * stopped mid-block, the user sees the highlighted code, then your UI replaces it in place. A contribution with `stream`
+ * mounts at the first characters instead and updates in place as the block grows. Blocks of other languages cost
  * nothing. The block keeps its Copy button and `CodeBlockAction` buttons over the top end corner of your UI, and its
  * height follows your UI as it grows; reserve the height you know (for example a minimum) so the timeline shifts less
  * when asynchronous content arrives.

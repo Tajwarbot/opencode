@@ -238,6 +238,7 @@ Agent progress, not telemetry.
 - `series.style`: `line`, `points`, `area`, or `bar`. `tone`: `accent` or `muted`.
 - `annotations[].at` is `[x, y]`.
 - Use labels that state the quantity and unit. A chart with no unit is a sketch.
+- Declare `x.domain` and `y.domain` whenever you know the range. The plot draws while the fence streams, and a fixed domain keeps the axes still while points arrive; without one the scale reflows as each point lands.
 
 ## html
 
