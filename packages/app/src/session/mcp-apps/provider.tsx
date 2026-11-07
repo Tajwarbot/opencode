@@ -17,9 +17,15 @@ export function McpAppHostProvider(props: ParentProps) {
   const platform = usePlatform()
 
   const [catalog] = createResource(async () => {
-    const result = await sdk.api.experimental.mcp.app.catalog({ location: { directory: data.directory } })
+    try {
+      const result = await sdk.api.experimental.mcp.app.catalog({ location: { directory: data.directory } })
 
-    return result.data.apps
+      return result.data.apps
+    } catch {
+      // A server without the experimental MCP Apps route (older build, partial rollout) must not take the session
+      // screen down with it; the session works without the app catalog.
+      return []
+    }
   })
 
   const host: McpAppHost = {
