@@ -41,6 +41,7 @@ jobs:
       - run: bun run --cwd packages/desktop build
         env:
           OPENCODE_CHANNEL: dev
+          OPENCODE_RELEASE: ${{ github.ref_name }}
           OPENCODE_TARGET: ${{ matrix.target }}
           OPENCODE_CLI_VERSION: "2.2.5"
       - run: bunx electron-builder ${{ matrix.package }} --publish never --config electron-builder.config.ts

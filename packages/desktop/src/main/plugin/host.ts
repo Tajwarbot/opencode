@@ -45,7 +45,7 @@ import {
   PluginsChanged,
   type DesktopEvent,
 } from "../../shared/ipc-rpc/events"
-import { CHANNEL, VERSION } from "../constants"
+import { CHANNEL, RELEASE, VERSION } from "../constants"
 import { emitIpcEvent } from "../ipc-events"
 import { isQuitting, type Handoff, type State } from "../lifecycle/machine"
 import { refreshMenu, setMenubarProvider } from "../native/menu"
@@ -837,6 +837,9 @@ export function createHost(input: {
       },
       get app() {
         return about
+      },
+      get release() {
+        return RELEASE
       },
       get serverEndpoints() {
         return serverEndpoints

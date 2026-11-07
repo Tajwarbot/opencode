@@ -408,6 +408,11 @@ export interface BuiltinMainContext extends MainContext {
   readonly storage: BuiltinMainStorage
   /** Restarts the app, keeping this plugin through a handoff. */
   readonly lifecycle: Lifecycle
+  /**
+   * The fork release tag this build came from, when the host embeds one, for example `visuals-v2.2.5-r8`.
+   * Undefined for upstream builds and local development.
+   */
+  readonly release?: string
 }
 
 /**

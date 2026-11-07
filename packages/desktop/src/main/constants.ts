@@ -8,6 +8,9 @@ export const CHANNEL: Channel = raw === "local" || raw === "dev" || raw === "bet
 
 export const VERSION = app.isPackaged ? app.getVersion() : (process.env.OPENCODE_VERSION ?? app.getVersion())
 
+// The fork release tag this build came from, so the updater can compare it with the latest GitHub release.
+export const RELEASE = import.meta.env.OPENCODE_RELEASE || undefined
+
 const appNames = {
   local: "OpenCode Visuals",
   dev: "OpenCode Visuals",
