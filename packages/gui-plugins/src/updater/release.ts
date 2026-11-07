@@ -20,6 +20,8 @@ export type ForkArch = "x64" | "arm64"
 
 const TAG_PREFIX = "visuals-v"
 
+const DOWNLOAD_PREFIX = "/Tajwarbot/opencode/releases/download/"
+
 /** Reads the fields the updater uses, ignoring a release that is not one of the fork's visual builds. */
 export function parseRelease(value: unknown): ForkRelease | undefined {
   if (!isRecord(value)) return undefined
@@ -49,6 +51,17 @@ export function parseRelease(value: unknown): ForkRelease | undefined {
 }
 
 /** The installer for this platform and architecture, or undefined when the release has none. */
+/** Whether a download URL is one of the fork's GitHub release assets. */
+export function isUpdateURL(url: string) {
+  try {
+    const parsed = new URL(url)
+
+    return parsed.protocol === "https:" && parsed.hostname === "github.com" && parsed.pathname.startsWith(DOWNLOAD_PREFIX)
+  } catch {
+    return false
+  }
+}
+
 export function selectAsset(
   release: ForkRelease,
   platform: ForkPlatform,

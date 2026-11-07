@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { isNewer, parseRelease, selectAsset } from "./release"
+import { isNewer, isUpdateURL, parseRelease, selectAsset } from "./release"
 
 const release = {
   tag_name: "visuals-v2.2.5-r8",
@@ -30,6 +30,17 @@ describe("parseRelease", () => {
     expect(parseRelease({ tag_name: "v1.0.0", published_at: "x", assets: [] })).toBeUndefined()
     expect(parseRelease({ tag_name: "visuals-v2.2.5-r8", published_at: "x", assets: [{ name: 1 }] })).toBeUndefined()
     expect(parseRelease(undefined)).toBeUndefined()
+  })
+})
+
+describe("isUpdateURL", () => {
+  test("accepts only the fork's release downloads", () => {
+    expect(isUpdateURL("https://github.com/Tajwarbot/opencode/releases/download/visuals-v2.2.5-r8/a.exe")).toBe(true)
+    expect(isUpdateURL("https://github.com/Tajwarbot/opencode/releases/download/visuals-v2.2.5-r8/a.exe?x=1")).toBe(true)
+    expect(isUpdateURL("https://github.com/other/repo/releases/download/x/a.exe")).toBe(false)
+    expect(isUpdateURL("http://github.com/Tajwarbot/opencode/releases/download/x/a.exe")).toBe(false)
+    expect(isUpdateURL("https://evil.example/Tajwarbot/opencode/releases/download/x/a.exe")).toBe(false)
+    expect(isUpdateURL("not a url")).toBe(false)
   })
 })
 

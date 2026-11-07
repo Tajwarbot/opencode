@@ -1,11 +1,9 @@
 import { shell } from "electron"
 import { Effect } from "effect"
 import type { Platform } from "./machine"
-import { isNewer, parseRelease, selectAsset, type ForkPlatform } from "./release"
+import { isNewer, isUpdateURL, parseRelease, selectAsset, type ForkPlatform } from "./release"
 
 const RELEASES = "https://api.github.com/repos/Tajwarbot/opencode/releases/latest"
-
-const DOWNLOADS = "/Tajwarbot/opencode/releases/download/"
 
 const CHECK_TIMEOUT_MS = 15_000
 
@@ -52,10 +50,7 @@ export const make = Effect.fn("Updater.fork")(function* (installed: string) {
     externalInstall: (url) =>
       Effect.tryPromise({
         try: async () => {
-          const parsed = new URL(url)
-
-          if (parsed.protocol !== "https:" || parsed.hostname !== "github.com" || !parsed.pathname.startsWith(DOWNLOADS))
-            throw new Error("Unexpected update URL")
+          if (!isUpdateURL(url)) throw new Error("Unexpected update URL")
 
           await shell.openExternal(url)
         },
