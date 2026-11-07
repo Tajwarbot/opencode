@@ -10,7 +10,7 @@ const setup: Plugin.MainSetup = async (ctx) => {
   const builtin = builtinMainContext(ctx)
   const build = ctx.app
   const lifecycle = builtin.lifecycle
-  const enabled = build.packaged && build.channel !== "dev"
+  const release = builtin.release
   // Holds no resources, so it needs no cleanup.
   const context = logContext(ctx.log.write)
   const runPromise = Effect.runPromiseWith(context)
@@ -23,10 +23,15 @@ const setup: Plugin.MainSetup = async (ctx) => {
     from: { settings: "ready", file: "opencode.updater" },
   })
 
-  // electron-updater loads only in packaged builds, after the first window is up.
-  const platform = enabled
-    ? await import("./platform").then((module) => runPromise(module.make(build.channel)))
-    : undefined
+  // A fork build checks its own GitHub releases and offers the installer download. An upstream build keeps
+  // electron-updater. Linux has no fork platform because the AppImage launcher owns its updates.
+  const platform = build.packaged && release
+    ? await import("./fork").then((module) => runPromise(module.make(release)))
+    : build.packaged && build.channel !== "dev"
+      ? await import("./platform").then((module) => runPromise(module.make(build.channel)))
+      : undefined
+
+  const enabled = !!platform
 
   if (ctx.signal.aborted) return
   const scope = Scope.makeUnsafe()
@@ -83,6 +88,26 @@ const setup: Plugin.MainSetup = async (ctx) => {
           title: ctx.t("dialog.upToDate.title"),
         }),
       )
+
+      return
+    }
+
+    if (state.status === "download-required") {
+      const response = yield* promise(() =>
+        dialog.showMessageBox({
+          type: "info",
+          message: ctx.t("dialog.download.message", { version: state.version }),
+          title: ctx.t("dialog.download.title"),
+          buttons: [ctx.t("dialog.download.action"), ctx.t("dialog.later")],
+          defaultId: 0,
+          cancelId: 1,
+        }),
+      )
+
+      if (response.response === 0)
+        yield* updater.install.pipe(
+          Effect.catch((error) => Effect.logWarning("update download failed", { message: error.message })),
+        )
 
       return
     }
