@@ -10,7 +10,30 @@ permissions:
   contents: write
 
 jobs:
+  cli:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+      - run: bun install
+        env:
+          HUSKY: "0"
+      - run: bun run build && rm -rf dist/.bun
+        working-directory: packages/cli
+        env:
+          BUN_COMPILE_RELEASE: bun-v1.4.4
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli
+          path: packages/cli/dist
+          if-no-files-found: error
+
   build:
+    needs: cli
     strategy:
       fail-fast: false
       matrix:
@@ -38,12 +61,15 @@ jobs:
       - run: bun install
         env:
           HUSKY: "0"
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli
+          path: packages/cli/dist
       - run: bun run --cwd packages/desktop build
         env:
           OPENCODE_CHANNEL: dev
           OPENCODE_RELEASE: ${{ github.ref_name }}
           OPENCODE_TARGET: ${{ matrix.target }}
-          OPENCODE_CLI_VERSION: "2.2.5"
       - run: bunx electron-builder ${{ matrix.package }} --publish never --config electron-builder.config.ts
         working-directory: packages/desktop
         env:
