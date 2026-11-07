@@ -11,14 +11,18 @@ import { Config } from "../config.js"
 import os from "os"
 import opencodeContent from "./skill/opencode.md" with { type: "text" }
 import reportContent from "./skill/report.md" with { type: "text" }
+import visualContent from "./skill/visual.md" with { type: "text" }
 
 export const OpencodeContent = opencodeContent
 export const ReportContent = reportContent
+export const VisualContent = visualContent
 
 export const OpencodeDescription =
   "Use this skill for any question about OpenCode itself, including how OpenCode works, using or configuring it, migrating from V1 to V2, troubleshooting it, developing plugins or integrations, using the OpenCode SDK, clients, server, or API, and contributing to the OpenCode codebase. Also use it for OpenCode agents, commands, skills, tools, permissions, MCP servers, providers, models, themes, keybinds, formatters, the CLI, TUI, desktop app, and web app."
 const REPORT_DESCRIPTION =
   "Use when the user wants to report an opencode issue or bug. Collect standard diagnostics, add user-specific reproduction context, and publish the issue with GitHub CLI."
+const VISUAL_DESCRIPTION =
+  "Use for any technical answer where a drawing, chart, mechanism, or interactive exhibit would prove the point, even when the user did not ask. Use whenever the user mentions visual, visualization, diagram, chart, animation, simulation, interactive, or asks to see something. Renders an inline interactive visual in the conversation. Not for ordinary tables, static labeled structures that Mermaid already covers, or project files."
 
 export const Plugin = define({
   id: "opencode.skill",
@@ -41,6 +45,15 @@ export const Plugin = define({
           description: REPORT_DESCRIPTION,
           path: AbsolutePath.make("skill://report/SKILL.md"),
           content: reportContent,
+        }),
+      )
+      editor.add(
+        Skill.Info.make({
+          id: Skill.ID.make("visual"),
+          name: Skill.Name.make("Visual"),
+          description: VISUAL_DESCRIPTION,
+          path: AbsolutePath.make("skill://visual/SKILL.md"),
+          content: VisualContent,
         }),
       )
     })

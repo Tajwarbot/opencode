@@ -52,6 +52,14 @@ describe("SkillPlugin.Plugin", () => {
           description: expect.stringContaining("opencode issue"),
         }),
       )
+      expect(skills).toContainEqual(
+        expect.objectContaining({
+          id: "visual",
+          name: "Visual",
+          path: "skill://visual/SKILL.md",
+          description: expect.stringContaining("interactive exhibit"),
+        }),
+      )
       expect(report?.content).toContain("- opencode version: 1.2.3")
       expect(report?.content).toContain("- install/channel: beta")
     }),
